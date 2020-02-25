@@ -3,12 +3,12 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>no.ssb.rawdata</groupId>
-    <artifactId>rawdata-client-payload-encryption</artifactId>
+    <artifactId>rawdata-crypto-util</artifactId>
     <version>0.1-SNAPSHOT</version>
     <packaging>jar</packaging>
 
-    <name>Rawdata Client Payload Encryption</name>
-    <description>Rawdata Client  Payload Encryption</description>
+    <name>Rawdata Crypto Util</name>
+    <description>Rawdata Crypto Util</description>
     <url>https://github.com/statisticsnorway/</url>
     <inceptionYear>2020</inceptionYear>
 
@@ -35,9 +35,9 @@
     </developers>
 
     <scm>
-        <connection>scm:git:git://github.com/statisticsnorway/rawdata-client-payload-encryption.git</connection>
-        <developerConnection>scm:git:git@github.com:statisticsnorway/rawdata-client-payload-encryption.git</developerConnection>
-        <url>https://github.com/statisticsnorway/rawdata-client-payload-encryption/tree/master</url>
+        <connection>scm:git:git://github.com/statisticsnorway/rawdata-crypto-util.git</connection>
+        <developerConnection>scm:git:git@github.com:statisticsnorway/rawdata-crypto-util.git</developerConnection>
+        <url>https://github.com/statisticsnorway/rawdata-crypto-util/tree/master</url>
         <tag>HEAD</tag>
     </scm>
 
