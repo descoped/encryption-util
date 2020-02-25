@@ -15,7 +15,7 @@ import static org.testng.Assert.assertFalse;
 
 public class EncryptionClientTest {
 
-    static final String PRIVATE_KEY = "SECURE_KMS_TOKEN";
+    static final String KEY = "SECURE_KMS_TOKEN";
     static final String PAYLOAD = "{\"data\" : \"somevalue\"}";
 
     final List<byte[]> cipherMessages = new ArrayList<>();
@@ -23,7 +23,7 @@ public class EncryptionClientTest {
     @Test
     public void testEncryption() throws InvalidKeySpecException {
         EncryptionClient client = new EncryptionClient();
-        SecretKeySpec secretKey = client.generateSecretKey(PRIVATE_KEY.toCharArray(), "SALT".getBytes());
+        SecretKeySpec secretKey = client.generateSecretKey(KEY.toCharArray(), "SALT".getBytes());
         byte[] iv = client.generateIV();
         byte[] cipherMessage = client.encrypt(secretKey.getEncoded(), iv, PAYLOAD.getBytes());
         cipherMessages.add(cipherMessage);
@@ -34,7 +34,7 @@ public class EncryptionClientTest {
     public void testDecryption() throws InvalidKeySpecException {
         assertFalse(cipherMessages.isEmpty(), "Encryption must be executed before decryption");
         EncryptionClient client = new EncryptionClient();
-        byte[] secretKey = client.generateSecretKey(PRIVATE_KEY.toCharArray(), "SALT".getBytes()).getEncoded();
+        byte[] secretKey = client.generateSecretKey(KEY.toCharArray(), "SALT".getBytes()).getEncoded();
         byte[] plaintext = client.decrypt(secretKey, cipherMessages.get(0));
         assertEquals(plaintext, PAYLOAD.getBytes());
     }
@@ -52,7 +52,7 @@ public class EncryptionClientTest {
     @Test(dataProvider = "Plaintext-Length-Variations")
     public void testEncryptionAndDecryption(String plaintext) throws InvalidKeySpecException {
         EncryptionClient client = new EncryptionClient();
-        SecretKeySpec secretKey = client.generateSecretKey(PRIVATE_KEY.toCharArray(), "SALT".getBytes());
+        SecretKeySpec secretKey = client.generateSecretKey(KEY.toCharArray(), "SALT".getBytes());
 
         byte[] iv = client.generateIV();
 

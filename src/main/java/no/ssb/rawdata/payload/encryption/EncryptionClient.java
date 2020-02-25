@@ -20,15 +20,23 @@ import java.security.spec.KeySpec;
 
 public class EncryptionClient {
 
-    static final String CIPHER_TRANSFORMATION = "AES/GCM/NoPadding";
-    static final String ALGORITHM = "AES";
-    static final String DEFAULT_CONTENT_ENCODING = "gzip";
-    static final int AES_KEY_SIZE = 128;
-    static final int GCM_TAG_LENGTH = AES_KEY_SIZE / 8; // default: 16
-    static final int GCM_IV_LENGTH = (GCM_TAG_LENGTH / 4) * 3; // default: 12
     static final SecretKeyFactory secretKeyFactory = getSecretKeyFactory();
 
-    private static SecretKeyFactory getSecretKeyFactory() {
+    final Algorithm algorithm;
+    final int gcmTagLength;
+    final int gcpIvLength;
+
+    public EncryptionClient() {
+        this(Algorithm.AES128);
+    }
+
+    public EncryptionClient(Algorithm algorithm) {
+        this.algorithm = algorithm;
+        this.gcmTagLength = 16;
+        this.gcpIvLength = 12;
+    }
+
+    static SecretKeyFactory getSecretKeyFactory() {
         try {
             return SecretKeyFactory.getInstance(/*"PBKDF2WithHmacSHA3-512"*/"PBKDF2WithHmacSHA256");
         } catch (NoSuchAlgorithmException e) {
@@ -47,29 +55,48 @@ public class EncryptionClient {
         return new String(hexChars);
     }
 
-    SecretKeySpec generateSecretKey(char[] privateKey, byte[] salt) throws InvalidKeySpecException {
-        KeySpec spec = new PBEKeySpec(privateKey, salt, 65536, AES_KEY_SIZE);
-        SecretKey tmp = secretKeyFactory.generateSecret(spec);
-        return new SecretKeySpec(tmp.getEncoded(), ALGORITHM);
-    }
-
-    byte[] generateInitialSecretKey() {
-        byte[] key = new byte[GCM_TAG_LENGTH];
+    /**
+     * Generate an initial secret key
+     *
+     * @return AES GCM SecretKey
+     */
+    SecretKey generateInitialSecretKey() {
+        byte[] key = new byte[gcmTagLength];
         SecureRandom random = new SecureRandom();
         random.nextBytes(key);
-        SecretKey secretKey = new SecretKeySpec(key, ALGORITHM);
-        return secretKey.getEncoded();
+        SecretKey secretKey = new SecretKeySpec(key, "AES");
+        return secretKey;
     }
 
-    byte[] generateSalt() {
-        byte[] iv = new byte[AES_KEY_SIZE / 8];
-        SecureRandom random = new SecureRandom();
-        random.nextBytes(iv);
-        return iv;
+    /**
+     * @param key  provided encryption key
+     * @param salt provided salt
+     * @return AES GCM SecretKey
+     * @throws InvalidKeySpecException
+     */
+    SecretKeySpec generateSecretKey(char[] key, byte[] salt) throws InvalidKeySpecException {
+        KeySpec spec = new PBEKeySpec(key, salt, 65536, algorithm.aesKeySize());
+        SecretKey tmp = secretKeyFactory.generateSecret(spec);
+        return new SecretKeySpec(tmp.getEncoded(), "AES");
     }
 
+    /**
+     * Generate a default IV (12 bytes)
+     *
+     * @return IV
+     */
     byte[] generateIV() {
-        byte[] iv = new byte[GCM_IV_LENGTH];
+        return generateIV(gcpIvLength);
+    }
+
+    /**
+     * Generate an IV with a given length
+     *
+     * @param ivLength
+     * @return IV
+     */
+    byte[] generateIV(int ivLength) {
+        byte[] iv = new byte[ivLength];
         SecureRandom random = new SecureRandom();
         random.nextBytes(iv);
         return iv;
@@ -78,16 +105,16 @@ public class EncryptionClient {
     /**
      * Encrypt payload with AES GCM transformation
      *
-     * @param key       secretKey
+     * @param secretKey secretKey
      * @param iv        initialization vector
      * @param plaintext payload to encrypt
      * @return byte-array with the segments: iv-length, iv and ciphertext
      */
-    byte[] encrypt(final byte[] key, final byte[] iv, final byte[] plaintext) {
+    byte[] encrypt(final byte[] secretKey, final byte[] iv, final byte[] plaintext) {
         try {
-            Cipher cipher = Cipher.getInstance(CIPHER_TRANSFORMATION);
-            GCMParameterSpec gcmParameterSpec = new GCMParameterSpec(AES_KEY_SIZE, iv);
-            SecretKeySpec keySpec = new SecretKeySpec(key, ALGORITHM);
+            Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
+            GCMParameterSpec gcmParameterSpec = new GCMParameterSpec(algorithm.aesKeySize(), iv);
+            SecretKeySpec keySpec = new SecretKeySpec(secretKey, "AES");
             cipher.init(Cipher.ENCRYPT_MODE, keySpec, gcmParameterSpec);
 
             ByteBuffer cipherBuffer = ByteBuffer.allocate(4 + iv.length + cipher.getBlockSize() + plaintext.length);
@@ -104,23 +131,23 @@ public class EncryptionClient {
     /**
      * Decrypt payload with AES GCM transformation
      *
-     * @param key           secretKey
+     * @param secretKey     secretKey
      * @param cipherMessage byte-array with the segments: iv-length, iv and ciphertext
      * @return decrypted plaintext
      */
-    byte[] decrypt(final byte[] key, final byte[] cipherMessage) {
+    byte[] decrypt(final byte[] secretKey, final byte[] cipherMessage) {
         try {
             ByteBuffer cipherBuffer = ByteBuffer.wrap(cipherMessage);
             int ivLength = cipherBuffer.getInt();
-            if (ivLength < GCM_IV_LENGTH || ivLength >= GCM_TAG_LENGTH) { // check input parameter
-                throw new IllegalArgumentException("invalid iv length");
+            if (ivLength < gcpIvLength || ivLength >= gcmTagLength) {
+                throw new IllegalArgumentException("Invalid IV length!");
             }
             byte[] iv = new byte[ivLength];
             cipherBuffer.get(iv);
 
-            Cipher cipher = Cipher.getInstance(CIPHER_TRANSFORMATION);
-            SecretKeySpec keySpec = new SecretKeySpec(key, ALGORITHM);
-            GCMParameterSpec gcmParameterSpec = new GCMParameterSpec(AES_KEY_SIZE, iv);
+            Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
+            SecretKeySpec keySpec = new SecretKeySpec(secretKey, "AES");
+            GCMParameterSpec gcmParameterSpec = new GCMParameterSpec(algorithm.aesKeySize(), iv);
             cipher.init(Cipher.DECRYPT_MODE, keySpec, gcmParameterSpec);
             ByteBuffer plaintextBuffer = ByteBuffer.allocate(cipherBuffer.remaining() - (4 + ivLength));
             cipher.doFinal(cipherBuffer, plaintextBuffer);
