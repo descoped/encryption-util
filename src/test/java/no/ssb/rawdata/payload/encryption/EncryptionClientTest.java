@@ -1,8 +1,10 @@
 package no.ssb.rawdata.payload.encryption;
 
+import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import javax.crypto.spec.SecretKeySpec;
+import java.nio.charset.StandardCharsets;
 import java.security.spec.InvalidKeySpecException;
 import java.util.ArrayList;
 import java.util.Base64;
@@ -11,12 +13,6 @@ import java.util.List;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
 
-// https://en.wikipedia.org/wiki/Block_cipher_mode_of_operation
-// https://www.novixys.com/blog/java-aes-example/
-// https://proandroiddev.com/security-best-practices-symmetric-encryption-with-aes-in-java-7616beaaade9
-// https://proandroiddev.com/security-best-practices-symmetric-encryption-with-aes-in-java-and-android-part-2-b3b80e99ad36
-// https://devops.datenkollektiv.de/using-aes-with-openssl-to-encrypt-files.html
-// https://codereview.stackexchange.com/questions/234727/java-rsa-aes-gcm-encryption-utility
 public class EncryptionClientTest {
 
     static final String PRIVATE_KEY = "SECURE_KMS_TOKEN";
@@ -41,5 +37,34 @@ public class EncryptionClientTest {
         byte[] secretKey = client.generateSecretKey(PRIVATE_KEY.toCharArray(), "SALT".getBytes()).getEncoded();
         byte[] plaintext = client.decrypt(secretKey, cipherMessages.get(0));
         assertEquals(plaintext, PAYLOAD.getBytes());
+    }
+
+    @DataProvider(name = "Plaintext-Length-Variations")
+    public static Object[][] credentials() {
+        String base = "1234567890abcdefghijklmnopqrstuvwxyz";
+        Object[][] objects = new Object[35][];
+        for (int i = 0; i < 35; i++) {
+            objects[i] = new Object[]{base.substring(0, i)};
+        }
+        return objects;
+    }
+
+    @Test(dataProvider = "Plaintext-Length-Variations")
+    public void testEncryptionAndDecryption(String plaintext) throws InvalidKeySpecException {
+        EncryptionClient client = new EncryptionClient();
+        SecretKeySpec secretKey = client.generateSecretKey(PRIVATE_KEY.toCharArray(), "SALT".getBytes());
+
+        byte[] iv = client.generateIV();
+
+        byte[] cipherMessage = client.encrypt(secretKey.getEncoded(), iv, plaintext.getBytes(StandardCharsets.UTF_8));
+
+        byte[] plaintextBytes = client.decrypt(secretKey.getEncoded(), cipherMessage);
+
+        assertEquals(new String(plaintextBytes, StandardCharsets.UTF_8), plaintext);
+    }
+
+    @Test
+    public void testSpecificEncryptionAndDecryption() throws InvalidKeySpecException {
+        testEncryptionAndDecryption("hello crypto");
     }
 }

@@ -90,9 +90,7 @@ public class EncryptionClient {
             SecretKeySpec keySpec = new SecretKeySpec(key, ALGORITHM);
             cipher.init(Cipher.ENCRYPT_MODE, keySpec, gcmParameterSpec);
 
-            int blockAlignedPlaintextSize = (1 + ((plaintext.length - 1) / cipher.getBlockSize())) * cipher.getBlockSize();
-
-            ByteBuffer cipherBuffer = ByteBuffer.allocate(4 + iv.length + 6 + blockAlignedPlaintextSize);
+            ByteBuffer cipherBuffer = ByteBuffer.allocate(4 + iv.length + cipher.getBlockSize() + plaintext.length);
             cipherBuffer.putInt(iv.length);
             cipherBuffer.put(iv);
             cipher.doFinal(ByteBuffer.wrap(plaintext), cipherBuffer);
