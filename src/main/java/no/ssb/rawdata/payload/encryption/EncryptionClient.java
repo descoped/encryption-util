@@ -60,7 +60,7 @@ public class EncryptionClient {
      *
      * @return AES GCM SecretKey
      */
-    SecretKey generateInitialSecretKey() {
+    public SecretKey generateInitialSecretKey() {
         byte[] key = new byte[gcmTagLength];
         SecureRandom random = new SecureRandom();
         random.nextBytes(key);
@@ -72,12 +72,15 @@ public class EncryptionClient {
      * @param key  provided encryption key
      * @param salt provided salt
      * @return AES GCM SecretKey
-     * @throws InvalidKeySpecException
      */
-    SecretKeySpec generateSecretKey(char[] key, byte[] salt) throws InvalidKeySpecException {
-        KeySpec spec = new PBEKeySpec(key, salt, 65536, algorithm.aesKeySize());
-        SecretKey tmp = secretKeyFactory.generateSecret(spec);
-        return new SecretKeySpec(tmp.getEncoded(), "AES");
+    public SecretKeySpec generateSecretKey(char[] key, byte[] salt) {
+        try {
+            KeySpec spec = new PBEKeySpec(key, salt, 65536, algorithm.aesKeySize());
+            SecretKey tmp = secretKeyFactory.generateSecret(spec);
+            return new SecretKeySpec(tmp.getEncoded(), "AES");
+        } catch (InvalidKeySpecException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     /**
@@ -85,7 +88,7 @@ public class EncryptionClient {
      *
      * @return IV
      */
-    byte[] generateIV() {
+    public byte[] generateIV() {
         return generateIV(gcpIvLength);
     }
 
@@ -95,7 +98,7 @@ public class EncryptionClient {
      * @param ivLength
      * @return IV
      */
-    byte[] generateIV(int ivLength) {
+    public byte[] generateIV(int ivLength) {
         byte[] iv = new byte[ivLength];
         SecureRandom random = new SecureRandom();
         random.nextBytes(iv);
@@ -110,7 +113,7 @@ public class EncryptionClient {
      * @param plaintext payload to encrypt
      * @return byte-array with the segments: iv-length, iv and ciphertext
      */
-    byte[] encrypt(final byte[] secretKey, final byte[] iv, final byte[] plaintext) {
+    public byte[] encrypt(final byte[] secretKey, final byte[] iv, final byte[] plaintext) {
         try {
             Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
             GCMParameterSpec gcmParameterSpec = new GCMParameterSpec(algorithm.aesKeySize(), iv);
@@ -135,7 +138,7 @@ public class EncryptionClient {
      * @param cipherMessage byte-array with the segments: iv-length, iv and ciphertext
      * @return decrypted plaintext
      */
-    byte[] decrypt(final byte[] secretKey, final byte[] cipherMessage) {
+    public byte[] decrypt(final byte[] secretKey, final byte[] cipherMessage) {
         try {
             ByteBuffer cipherBuffer = ByteBuffer.wrap(cipherMessage);
             int ivLength = cipherBuffer.getInt();
