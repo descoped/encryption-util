@@ -6,6 +6,7 @@ import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
 import javax.crypto.SecretKeyFactory;
+import javax.crypto.ShortBufferException;
 import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.PBEKeySpec;
 import javax.crypto.spec.SecretKeySpec;
@@ -77,8 +78,8 @@ public class EncryptionClient {
     /**
      * Encrypt payload with AES GCM transformation
      *
-     * @param key secretKey
-     * @param iv initialization vector
+     * @param key       secretKey
+     * @param iv        initialization vector
      * @param plaintext payload to encrypt
      * @return byte-array with the segments: iv-length, iv and ciphertext
      */
@@ -88,16 +89,16 @@ public class EncryptionClient {
             GCMParameterSpec gcmParameterSpec = new GCMParameterSpec(AES_KEY_SIZE, iv);
             SecretKeySpec keySpec = new SecretKeySpec(key, ALGORITHM);
             cipher.init(Cipher.ENCRYPT_MODE, keySpec, gcmParameterSpec);
-            byte[] cipherText = cipher.doFinal(plaintext);
 
-            ByteBuffer byteBuffer = ByteBuffer.allocate(4 + iv.length + cipherText.length);
-            byteBuffer.putInt(iv.length);
-            byteBuffer.put(iv);
-            byteBuffer.put(cipherText);
-            return byteBuffer.array();
+            int blockAlignedPlaintextSize = (1 + ((plaintext.length - 1) / cipher.getBlockSize())) * cipher.getBlockSize();
 
-        } catch (NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException |
-                InvalidAlgorithmParameterException | IllegalBlockSizeException | BadPaddingException e) {
+            ByteBuffer cipherBuffer = ByteBuffer.allocate(4 + iv.length + 6 + blockAlignedPlaintextSize);
+            cipherBuffer.putInt(iv.length);
+            cipherBuffer.put(iv);
+            cipher.doFinal(ByteBuffer.wrap(plaintext), cipherBuffer);
+            return cipherBuffer.array();
+
+        } catch (NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException | InvalidAlgorithmParameterException | IllegalBlockSizeException | BadPaddingException | ShortBufferException e) {
             throw new RuntimeException(e);
         }
     }
@@ -105,30 +106,29 @@ public class EncryptionClient {
     /**
      * Decrypt payload with AES GCM transformation
      *
-     * @param key secretKey
+     * @param key           secretKey
      * @param cipherMessage byte-array with the segments: iv-length, iv and ciphertext
      * @return decrypted plaintext
      */
     byte[] decrypt(final byte[] key, final byte[] cipherMessage) {
         try {
-            ByteBuffer byteBuffer = ByteBuffer.wrap(cipherMessage);
-            int ivLength = byteBuffer.getInt();
+            ByteBuffer cipherBuffer = ByteBuffer.wrap(cipherMessage);
+            int ivLength = cipherBuffer.getInt();
             if (ivLength < GCM_IV_LENGTH || ivLength >= GCM_TAG_LENGTH) { // check input parameter
                 throw new IllegalArgumentException("invalid iv length");
             }
             byte[] iv = new byte[ivLength];
-            byteBuffer.get(iv);
-            byte[] ciphertext = new byte[byteBuffer.remaining()];
-            byteBuffer.get(ciphertext);
+            cipherBuffer.get(iv);
 
             Cipher cipher = Cipher.getInstance(CIPHER_TRANSFORMATION);
             SecretKeySpec keySpec = new SecretKeySpec(key, ALGORITHM);
             GCMParameterSpec gcmParameterSpec = new GCMParameterSpec(AES_KEY_SIZE, iv);
             cipher.init(Cipher.DECRYPT_MODE, keySpec, gcmParameterSpec);
-            return cipher.doFinal(ciphertext);
+            ByteBuffer plaintextBuffer = ByteBuffer.allocate(cipherBuffer.remaining() - (4 + ivLength));
+            cipher.doFinal(cipherBuffer, plaintextBuffer);
+            return plaintextBuffer.array();
 
-        } catch (NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException |
-                InvalidAlgorithmParameterException | IllegalBlockSizeException | BadPaddingException e) {
+        } catch (NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException | InvalidAlgorithmParameterException | IllegalBlockSizeException | BadPaddingException | ShortBufferException e) {
             throw new RuntimeException(e);
         }
     }
