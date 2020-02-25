@@ -1,8 +1,19 @@
+/.idea
+*.iml
+
+/target
+
+/tx-logs
+/neo4jdb
+
+/loadtest_target/
+
 # Compiled class file
 *.class
 
 # Log file
 *.log
+
 
 # BlueJ files
 *.ctxt
@@ -21,3 +32,12 @@
 
 # virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
 hs_err_pid*
+
+.idea/
+target/maven-archiver/
+
+dependency-reduced-pom.xml
+
+**/target
+
+**/certs
