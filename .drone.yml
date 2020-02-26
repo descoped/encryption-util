@@ -84,8 +84,6 @@ steps:
       M2_HOME: /drone/src/.m2
     depends_on:
       - code-analysis
-      - codacy
-      - codecov-plugin
       - codecov-manual
 
   - name: slack
