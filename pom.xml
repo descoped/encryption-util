@@ -4,7 +4,7 @@
 
     <groupId>no.ssb.rawdata</groupId>
     <artifactId>rawdata-crypto-util</artifactId>
-    <version>0.1-SNAPSHOT</version>
+    <version>0.1</version>
     <packaging>jar</packaging>
 
     <name>Rawdata Crypto Util</name>
@@ -38,7 +38,7 @@
         <connection>scm:git:git://github.com/statisticsnorway/rawdata-crypto-util.git</connection>
         <developerConnection>scm:git:git@github.com:statisticsnorway/rawdata-crypto-util.git</developerConnection>
         <url>https://github.com/statisticsnorway/rawdata-crypto-util/tree/master</url>
-        <tag>HEAD</tag>
+        <tag>v0.1</tag>
     </scm>
 
     <dependencies>
