@@ -112,6 +112,7 @@ name: slack_webhook_url
 get:
   path: drone-slack-webhook-url
   name: slack-webhook-url
+
 ---
 kind: secret
 name: sonar_host
