@@ -83,8 +83,7 @@ steps:
       MAVEN_HOME: /drone/src/.m2
       M2_HOME: /drone/src/.m2
     depends_on:
-      - code-analysis
-      - codecov-manual
+      - test
 
   - name: slack
     image: plugins/slack
