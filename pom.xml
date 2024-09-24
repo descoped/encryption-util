@@ -9,7 +9,7 @@
 
     <name>Rawdata Crypto Util</name>
     <description>Rawdata Crypto Util</description>
-    <url>https://github.com/statisticsnorway/</url>
+    <url>https://github.com/descoped/</url>
     <inceptionYear>2020</inceptionYear>
 
     <properties>
@@ -28,16 +28,14 @@
         <developer>
             <name>Ove Ranheim</name>
             <email>ove.ranheim@gmail.com</email>
-            <url>https://www.linkedin.com/in/oranheim/</url>
-            <organization>Capra Consulting AS</organization>
-            <organizationUrl>https://www.capraconsulting.no/</organizationUrl>
+            <url>https://www.linkedin.com/in/overanheim/</url>
         </developer>
     </developers>
 
     <scm>
-        <connection>scm:git:git://github.com/statisticsnorway/rawdata-crypto-util.git</connection>
-        <developerConnection>scm:git:git@github.com:statisticsnorway/rawdata-crypto-util.git</developerConnection>
-        <url>https://github.com/statisticsnorway/rawdata-crypto-util/tree/master</url>
+        <connection>scm:git:git://github.com/descoped/rawdata-crypto-util.git</connection>
+        <developerConnection>scm:git:git@github.com:descoped/rawdata-crypto-util.git</developerConnection>
+        <url>https://github.com/descoped/rawdata-crypto-util/tree/master</url>
         <tag>HEAD</tag>
     </scm>
 
@@ -45,7 +43,7 @@
         <dependency>
             <groupId>org.testng</groupId>
             <artifactId>testng</artifactId>
-            <version>6.14.3</version>
+            <version>7.10.2</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
@@ -58,7 +56,7 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-source-plugin</artifactId>
-                        <version>3.0.1</version>
+                        <version>3.3.1</version>
                         <executions>
                             <execution>
                                 <id>attach-sources</id>
@@ -71,7 +69,7 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-javadoc-plugin</artifactId>
-                        <version>3.1.0</version>
+                        <version>3.10.0</version>
                         <configuration>
                             <encoding>UTF-8</encoding>
                             <additionalOptions>-Xdoclint:none</additionalOptions>
@@ -88,7 +86,7 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-gpg-plugin</artifactId>
-                        <version>1.6</version>
+                        <version>3.2.6</version>
                         <executions>
                             <execution>
                                 <id>sign-artifacts</id>
@@ -126,12 +124,12 @@
                     <plugin>
                         <groupId>org.sonarsource.scanner.maven</groupId>
                         <artifactId>sonar-maven-plugin</artifactId>
-                        <version>3.6.1.1688</version>
+                        <version>4.0.0.4121</version>
                     </plugin>
                     <plugin>
                         <groupId>org.jacoco</groupId>
                         <artifactId>jacoco-maven-plugin</artifactId>
-                        <version>0.8.4</version>
+                        <version>0.8.12</version>
                         <executions>
                             <execution>
                                 <id>prepare-agent</id>
@@ -150,37 +148,13 @@
                 </plugins>
             </build>
         </profile>
-        <profile>
-            <id>ssb-bip</id>
-            <repositories>
-                <repository>
-                    <id>ssb-bip-releases</id>
-                    <url>https://nexus.prod-bip-ci.ssb.no/repository/maven-public/</url>
-                    <snapshots>
-                        <enabled>true</enabled>
-                    </snapshots>
-                </repository>
-            </repositories>
-            <distributionManagement>
-                <repository>
-                    <id>ssb-bip-releases</id>
-                    <name>SSB Nexus Releases</name>
-                    <url>https://nexus.prod-bip-ci.ssb.no/repository/maven-releases/</url>
-                </repository>
-                <snapshotRepository>
-                    <id>ssb-bip-snapshots</id>
-                    <name>SSB Snapshot Repository</name>
-                    <url>https://nexus.prod-bip-ci.ssb.no/repository/maven-snapshots/</url>
-                </snapshotRepository>
-            </distributionManagement>
-        </profile>
     </profiles>
 
     <build>
         <plugins>
             <plugin>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.8.0</version>
+                <version>3.13.0</version>
                 <configuration>
                     <source>${java.version}</source>
                     <target>${java.version}</target>
@@ -193,7 +167,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-resources-plugin</artifactId>
-                <version>3.1.0</version>
+                <version>3.3.1</version>
                 <configuration>
                     <encoding>UTF-8</encoding>
                 </configuration>
@@ -201,17 +175,17 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
-                <version>3.1.0</version>
+                <version>3.4.2</version>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
-                <version>2.19.1</version> <!-- Newer version do not yet work with Java 11 -->
+                <version>3.5.0</version> <!-- Newer version do not yet work with Java 11 -->
             </plugin>
             <plugin>
                 <groupId>org.sonatype.plugins</groupId>
                 <artifactId>nexus-staging-maven-plugin</artifactId>
-                <version>1.6.8</version>
+                <version>1.7.0</version>
                 <extensions>true</extensions>
                 <configuration>
                     <serverId>ossrh</serverId>
@@ -222,13 +196,33 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-release-plugin</artifactId>
-                <version>2.5.3</version>
+                <version>3.1.1</version>
                 <configuration>
                     <autoVersionSubmodules>true</autoVersionSubmodules>
                     <useReleaseProfile>false</useReleaseProfile>
                     <releaseProfiles>release</releaseProfiles>
                     <goals>deploy</goals>
                 </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-enforcer-plugin</artifactId>
+                <version>3.5.0</version>
+                <executions>
+                    <execution>
+                        <id>enforce-maven</id>
+                        <goals>
+                            <goal>enforce</goal>
+                        </goals>
+                        <configuration>
+                            <rules>
+                                <requireMavenVersion>
+                                    <version>[3.6.3,4)</version>
+                                </requireMavenVersion>
+                            </rules>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>
