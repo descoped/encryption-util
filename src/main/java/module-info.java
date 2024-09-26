@@ -1,6 +1,7 @@
-module no.ssb.rawdata.encryption {
+module io.descoped.rawdata.encryption {
 
     requires java.base;
+    requires org.slf4j;
 
-    exports no.ssb.rawdata.payload.encryption;
+    exports io.descoped.rawdata.payload.encryption;
 }
