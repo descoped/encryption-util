@@ -1,4 +1,4 @@
-package io.descoped.rawdata.payload.encryption;
+package io.descoped.encryption.client;
 
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
@@ -183,7 +183,7 @@ public class EncryptionClientTest {
 
     @Test(dataProvider = "algorithms")
     public void testLongPayloadEncryptionAndDecryption(Algorithm algorithm) throws Exception {
-        String longPayload = "This is a long payload that exceeds the block size of AES to ensure that multi-block encryption and decryption work correctly. " +
+        String longPayload = "This is a long client that exceeds the block size of AES to ensure that multi-block encryption and decryption work correctly. " +
                 "It should be long enough to span multiple blocks and test the CBC mode of operation effectively.".repeat(10);
         EncryptionClient client = new EncryptionClient(algorithm);
         byte[] salt = client.generateSalt();

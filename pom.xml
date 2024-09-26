@@ -2,13 +2,13 @@
 
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>io.descoped.rawdata</groupId>
+    <groupId>io.descoped.encryption</groupId>
     <artifactId>encryption-util</artifactId>
     <version>0.3-SNAPSHOT</version>
     <packaging>jar</packaging>
 
-    <name>Rawdata Crypto Util</name>
-    <description>Rawdata Crypto Util</description>
+    <name>Encryption Util</name>
+    <description>Encryption Util</description>
     <url>https://github.com/descoped/</url>
     <inceptionYear>2020</inceptionYear>
 

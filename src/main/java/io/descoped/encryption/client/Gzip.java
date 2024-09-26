@@ -1,4 +1,4 @@
-package io.descoped.rawdata.payload.encryption;
+package io.descoped.encryption.client;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;

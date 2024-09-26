@@ -1,4 +1,4 @@
-package io.descoped.rawdata.payload.encryption;
+package io.descoped.encryption.client;
 
 public class DecryptionException extends RuntimeException {
 

@@ -1,4 +1,4 @@
-package io.descoped.rawdata.payload.encryption;
+package io.descoped.encryption.client;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

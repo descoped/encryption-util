@@ -1,4 +1,4 @@
-package io.descoped.rawdata.payload.encryption;
+package io.descoped.encryption.client;
 
 public enum Algorithm {
     AES128(128), AES256(256);
