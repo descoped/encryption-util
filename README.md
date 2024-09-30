@@ -6,7 +6,6 @@
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=descoped_encryption-util&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=descoped_encryption-util) [![Coverage](https://sonarcloud.io/api/project_badges/measure?project=descoped_encryption-util&metric=coverage)](https://sonarcloud.io/summary/new_code?id=descoped_encryption-util)
 [![Snyk Security Score](https://snyk.io/test/github/descoped/encryption-util/badge.svg)](https://snyk.io/test/github/descoped/encryption-util)
 
-This is a utility API that provides AES CBC encryption and decryption of data and HMAC-SHA256 for integrity and
+This is a utility API that provides AES 128/256 GBC encryption and decryption of data and HMAC-SHA256 for integrity and
 authenticity verification. It requires a secret encryption key and salt.
-Encrypt returns a byte array that contains a unique IV following ciphertext.
-Decrypt uses the IV to return plaintext.
+
