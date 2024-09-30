@@ -31,9 +31,8 @@ public class EncryptionClientTest {
         EncryptionClient client = new EncryptionClient(algorithm);
         byte[] salt = client.generateSalt();
         SecretKey secretKey = client.deriveKey(PASSWORD.toCharArray(), salt);
-        byte[] iv = client.generateIV();
 
-        byte[] encrypted = client.encrypt(secretKey.getEncoded(), iv, PAYLOAD.getBytes(StandardCharsets.UTF_8));
+        byte[] encrypted = client.encrypt(secretKey.getEncoded(), PAYLOAD.getBytes(StandardCharsets.UTF_8));
         byte[] decrypted = client.decrypt(secretKey.getEncoded(), encrypted);
 
         assertEquals(new String(decrypted, StandardCharsets.UTF_8), PAYLOAD);
@@ -61,8 +60,7 @@ public class EncryptionClientTest {
         if (plaintext.isEmpty()) {
             // Test that empty plaintext is handled correctly
             try {
-                byte[] iv = client.generateIV();
-                client.encrypt(secretKey.getEncoded(), iv, plaintext.getBytes(StandardCharsets.UTF_8));
+                client.encrypt(secretKey.getEncoded(), plaintext.getBytes(StandardCharsets.UTF_8));
             } catch (IllegalArgumentException e) {
                 // Expected behavior for empty input
                 return;
@@ -70,8 +68,7 @@ public class EncryptionClientTest {
             throw new AssertionError("Expected IllegalArgumentException for empty input");
         }
 
-        byte[] iv = client.generateIV();
-        byte[] encrypted = client.encrypt(secretKey.getEncoded(), iv, plaintext.getBytes(StandardCharsets.UTF_8));
+        byte[] encrypted = client.encrypt(secretKey.getEncoded(), plaintext.getBytes(StandardCharsets.UTF_8));
         byte[] decrypted = client.decrypt(secretKey.getEncoded(), encrypted);
 
         assertEquals(new String(decrypted, StandardCharsets.UTF_8), plaintext);
@@ -84,12 +81,10 @@ public class EncryptionClientTest {
         SecretKey secretKey = client.deriveKey(PASSWORD.toCharArray(), salt);
 
         // First encryption
-        byte[] iv1 = client.generateIV();
-        byte[] encrypted1 = client.encrypt(secretKey.getEncoded(), iv1, PAYLOAD.getBytes(StandardCharsets.UTF_8));
+        byte[] encrypted1 = client.encrypt(secretKey.getEncoded(), PAYLOAD.getBytes(StandardCharsets.UTF_8));
 
         // Second encryption
-        byte[] iv2 = client.generateIV();
-        byte[] encrypted2 = client.encrypt(secretKey.getEncoded(), iv2, PAYLOAD.getBytes(StandardCharsets.UTF_8));
+        byte[] encrypted2 = client.encrypt(secretKey.getEncoded(), PAYLOAD.getBytes(StandardCharsets.UTF_8));
 
         // Decrypt both
         byte[] decrypted1 = client.decrypt(secretKey.getEncoded(), encrypted1);
@@ -171,9 +166,8 @@ public class EncryptionClientTest {
         EncryptionClient client = new EncryptionClient(algorithm);
         byte[] salt = client.generateSalt();
         SecretKey secretKey = client.deriveKey(PASSWORD.toCharArray(), salt);
-        byte[] iv = client.generateIV();
 
-        byte[] encrypted = client.encrypt(secretKey.getEncoded(), iv, PAYLOAD.getBytes(StandardCharsets.UTF_8));
+        byte[] encrypted = client.encrypt(secretKey.getEncoded(), PAYLOAD.getBytes(StandardCharsets.UTF_8));
 
         // Generate a different key
         SecretKey wrongKey = client.deriveKey("WRONG_PASSWORD".toCharArray(), salt);
@@ -184,13 +178,12 @@ public class EncryptionClientTest {
     @Test(dataProvider = "algorithms")
     public void testLongPayloadEncryptionAndDecryption(Algorithm algorithm) throws Exception {
         String longPayload = "This is a long client that exceeds the block size of AES to ensure that multi-block encryption and decryption work correctly. " +
-                "It should be long enough to span multiple blocks and test the CBC mode of operation effectively.".repeat(10);
+                "It should be long enough to span multiple blocks and test the GCM mode of operation effectively.".repeat(10);
         EncryptionClient client = new EncryptionClient(algorithm);
         byte[] salt = client.generateSalt();
         SecretKey secretKey = client.deriveKey(PASSWORD.toCharArray(), salt);
-        byte[] iv = client.generateIV();
 
-        byte[] encrypted = client.encrypt(secretKey.getEncoded(), iv, longPayload.getBytes(StandardCharsets.UTF_8));
+        byte[] encrypted = client.encrypt(secretKey.getEncoded(), longPayload.getBytes(StandardCharsets.UTF_8));
         byte[] decrypted = client.decrypt(secretKey.getEncoded(), encrypted);
 
         assertEquals(new String(decrypted, StandardCharsets.UTF_8), longPayload);
