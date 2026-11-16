@@ -84,6 +84,11 @@ jobs:
           CENTRAL_TOKEN_USER: ${{ secrets.CENTRAL_TOKEN_USER }}
           CENTRAL_TOKEN_PASSWORD: ${{ secrets.CENTRAL_TOKEN_PASSWORD }}
         run: |
+          # The organisation secrets are not shared with this public repository (Ove, 2026-11-17): then no SNAPSHOT
+          # is published, and the build stays green.
+          if [ -z "$CENTRAL_TOKEN_USER" ] || [ -z "$CENTRAL_TOKEN_PASSWORD" ]; then
+            echo "::notice::no Central Portal token available to this repository; SNAPSHOT not published"; exit 0
+          fi
           version=$(sed -n 's/^version=//p' target/maven-archiver/pom.properties)
           # The release plugin pushes its "prepare release" commit (a release version) to master on its own. That
           # commit is not published here: releases are published by hand, so it is skipped. Any other non-SNAPSHOT
