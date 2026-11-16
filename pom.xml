@@ -4,24 +4,29 @@
 
     <groupId>io.descoped.encryption</groupId>
     <artifactId>encryption-util</artifactId>
-    <version>2.0.2-SNAPSHOT</version>
+    <version>3.0.0-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <name>Encryption Util</name>
-    <description>Encryption Util</description>
-    <url>https://github.com/descoped/</url>
+    <description>Authenticated encryption with AES-GCM and password-based key derivation with PBKDF2-HMAC-SHA256, for
+        Java modules, on the JDK alone.
+    </description>
+    <url>https://github.com/descoped/encryption-util</url>
     <inceptionYear>2020</inceptionYear>
 
     <properties>
-        <java.version>11</java.version>
+        <java.version>17</java.version>
+        <maven.compiler.release>${java.version}</maven.compiler.release>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+
+        <junit.version>6.1.3</junit.version>
     </properties>
 
     <licenses>
         <license>
             <name>The Apache License, Version 2.0</name>
-            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            <url>https://www.apache.org/licenses/LICENSE-2.0.txt</url>
         </license>
     </licenses>
 
@@ -40,56 +45,43 @@
         <tag>HEAD</tag>
     </scm>
 
+    <!-- Snapshots go to the Central Portal snapshot repository; releases go through the Central Portal by
+         central-publishing-maven-plugin (profile `central`). Server id `central` holds the Portal user token. -->
     <distributionManagement>
         <snapshotRepository>
-            <id>ossrh</id>
-            <url>https://s01.oss.sonatype.org/content/repositories/snapshots</url>
+            <id>central</id>
+            <url>https://central.sonatype.com/repository/maven-snapshots/</url>
         </snapshotRepository>
-        <repository>
-            <id>ossrh</id>
-            <url>https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/</url>
-        </repository>
     </distributionManagement>
 
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.junit</groupId>
+                <artifactId>junit-bom</artifactId>
+                <version>${junit.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <!-- No runtime dependencies: the library uses the JDK's own JCA providers only. -->
     <dependencies>
         <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-api</artifactId>
-            <version>2.0.20</version>
-        </dependency>
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-simple</artifactId>
-            <version>2.0.20</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.testng</groupId>
-            <artifactId>testng</artifactId>
-            <version>7.12.0</version>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
             <scope>test</scope>
         </dependency>
     </dependencies>
 
     <profiles>
+        <!-- Publishing to Maven Central through the Central Portal.
+             Snapshot (no signing needed): mvn deploy -P central,secrets
+             Release (Ove approves each one): mvn release:prepare release:perform -P secrets
+             Releases are uploaded with autoPublish=false and published by hand in the Portal. -->
         <profile>
-            <id>oss-sonatype</id>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-release-plugin</artifactId>
-                        <configuration>
-                            <tagNameFormat>@{project.version}</tagNameFormat>
-                            <goals>deploy</goals>
-                        </configuration>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-
-        <profile>
-            <id>oss-maven-central</id>
+            <id>central</id>
             <build>
                 <plugins>
                     <plugin>
@@ -105,11 +97,9 @@
                             </execution>
                         </executions>
                     </plugin>
-
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-javadoc-plugin</artifactId>
-                        <version>3.12.0</version>
                         <executions>
                             <execution>
                                 <id>attach-javadocs</id>
@@ -119,32 +109,26 @@
                             </execution>
                         </executions>
                     </plugin>
-
                     <plugin>
-                        <groupId>org.sonatype.plugins</groupId>
-                        <artifactId>nexus-staging-maven-plugin</artifactId>
-                        <version>1.7.0</version>
+                        <groupId>org.sonatype.central</groupId>
+                        <artifactId>central-publishing-maven-plugin</artifactId>
+                        <version>0.12.0</version>
                         <extensions>true</extensions>
                         <configuration>
-                            <serverId>ossrh</serverId>
-                            <nexusUrl>https://s01.oss.sonatype.org/</nexusUrl>
-                            <autoReleaseAfterClose>true</autoReleaseAfterClose>
+                            <publishingServerId>central</publishingServerId>
+                            <autoPublish>false</autoPublish>
+                            <waitUntil>validated</waitUntil>
                         </configuration>
                     </plugin>
+                </plugins>
+            </build>
+        </profile>
 
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-release-plugin</artifactId>
-                        <version>3.3.1</version>
-                        <configuration>
-                            <tagNameFormat>@{project.version}</tagNameFormat>
-                            <autoVersionSubmodules>true</autoVersionSubmodules>
-                            <useReleaseProfile>false</useReleaseProfile>
-                            <releaseProfiles>release</releaseProfiles>
-                            <goals>deploy</goals>
-                        </configuration>
-                    </plugin>
-
+        <!-- Signing, required by Central for releases. gpg's default-key signs (see ~/.m2/NOTES.md). -->
+        <profile>
+            <id>sign</id>
+            <build>
+                <plugins>
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-gpg-plugin</artifactId>
@@ -158,12 +142,6 @@
                                 </goals>
                             </execution>
                         </executions>
-                        <configuration>
-                            <gpgArguments>
-                                <arg>--pinentry-mode</arg>
-                                <arg>loopback</arg>
-                            </gpgArguments>
-                        </configuration>
                     </plugin>
                 </plugins>
             </build>
@@ -203,27 +181,14 @@
                 <sonar.host.url>https://sonarcloud.io</sonar.host.url>
                 <sonar.organization>descoped</sonar.organization>
                 <sonar.projectKey>descoped_${project.artifactId}</sonar.projectKey>
-                <sonar.moduleKey>${project.groupId}:${project.artifactId}</sonar.moduleKey>
-                <sonar.coverage.exclusions />
-                <sonar.coverage.jacoco.xmlReportPaths>
-                    target/site/jacoco/jacoco.xml
-                </sonar.coverage.jacoco.xmlReportPaths>
+                <sonar.coverage.jacoco.xmlReportPaths>target/site/jacoco/jacoco.xml</sonar.coverage.jacoco.xmlReportPaths>
             </properties>
             <build>
                 <plugins>
                     <plugin>
                         <groupId>org.sonarsource.scanner.maven</groupId>
                         <artifactId>sonar-maven-plugin</artifactId>
-                        <version>4.0.1.6619</version>
-                        <executions>
-                            <execution>
-                                <id>sonar</id>
-                                <phase>verify</phase>
-                                <goals>
-                                    <goal>sonar</goal>
-                                </goals>
-                            </execution>
-                        </executions>
+                        <version>5.9.0.7382</version>
                     </plugin>
                 </plugins>
             </build>
@@ -233,13 +198,14 @@
     <build>
         <plugins>
             <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.16.0</version>
                 <configuration>
-                    <release>${java.version}</release>
-                    <encoding>${project.build.sourceEncoding}</encoding>
-                    <meminitial>64m</meminitial>
-                    <maxmem>512m</maxmem>
+                    <compilerArgs>
+                        <arg>-Xlint:all</arg>
+                        <arg>-Werror</arg>
+                    </compilerArgs>
                 </configuration>
             </plugin>
 
@@ -247,9 +213,6 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-resources-plugin</artifactId>
                 <version>3.5.0</version>
-                <configuration>
-                    <encoding>${project.reporting.outputEncoding}</encoding>
-                </configuration>
             </plugin>
 
             <plugin>
@@ -266,19 +229,62 @@
 
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <version>3.12.0</version>
+                <configuration>
+                    <doclint>all</doclint>
+                    <failOnWarnings>true</failOnWarnings>
+                </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-install-plugin</artifactId>
+                <version>3.2.0</version>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-deploy-plugin</artifactId>
+                <version>3.2.0</version>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-release-plugin</artifactId>
+                <version>3.3.1</version>
+                <configuration>
+                    <tagNameFormat>@{project.version}</tagNameFormat>
+                    <releaseProfiles>central,sign</releaseProfiles>
+                    <goals>deploy</goals>
+                </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-enforcer-plugin</artifactId>
                 <version>3.7.0</version>
-                <configuration>
-                    <rules>
-                        <requireJavaVersion>
-                            <version>${java.version}</version>
-                        </requireJavaVersion>
-                        <requireMavenVersion>
-                            <version>[3.6.3,4)</version>
-                        </requireMavenVersion>
-                    </rules>
-                </configuration>
+                <executions>
+                    <execution>
+                        <id>enforce</id>
+                        <goals>
+                            <goal>enforce</goal>
+                        </goals>
+                        <configuration>
+                            <rules>
+                                <requireJavaVersion>
+                                    <version>${java.version}</version>
+                                </requireJavaVersion>
+                                <!-- Sonatype's central-publishing-maven-plugin does not support Maven 4. -->
+                                <requireMavenVersion>
+                                    <version>[3.6.3,4)</version>
+                                </requireMavenVersion>
+                            </rules>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>
+
 </project>
