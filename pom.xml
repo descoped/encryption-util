@@ -4,7 +4,7 @@
 
     <groupId>io.descoped.encryption</groupId>
     <artifactId>encryption-util</artifactId>
-    <version>3.0.0-SNAPSHOT</version>
+    <version>3.0.0</version>
     <packaging>jar</packaging>
 
     <name>Encryption Util</name>
@@ -42,7 +42,7 @@
         <connection>scm:git:git://github.com/descoped/encryption-util.git</connection>
         <developerConnection>scm:git:git@github.com:descoped/encryption-util.git</developerConnection>
         <url>https://github.com/descoped/encryption-util/tree/master</url>
-        <tag>HEAD</tag>
+        <tag>3.0.0</tag>
     </scm>
 
     <!-- Snapshots go to the Central Portal snapshot repository; releases go through the Central Portal by
