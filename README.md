@@ -76,6 +76,7 @@ byte[] plaintext = client.decrypt(key, ciphertext, recordId);   // DecryptionExc
 | `DecryptionException` | The ciphertext is malformed, too short or in an unknown format; or it was encrypted with another key or associated data; or it was changed. Nothing is decrypted. |
 | `EncryptionException` | The platform cannot encrypt (AES-GCM unavailable). |
 | `IllegalArgumentException` | The key is not AES or not this client's size; the password is empty; the salt is shorter than 16 bytes; or the iteration count is below 65,536. |
+| `IllegalStateException` | The platform has no AES key generator or no PBKDF2-HMAC-SHA256 (`generateKey`, `deriveKey`). Every standard JDK has both. |
 | `NullPointerException` | Any argument is `null`. |
 
 Messages never contain keys, passwords or plaintext.
@@ -95,15 +96,20 @@ A ciphertext is the plaintext length plus 29 bytes. The GCM associated data is t
 caller's associated data. Changing the format byte, for example to downgrade to format 1, therefore fails
 authentication.
 
-Format 1, written by 2.0.x, has the same layout with `0x01` and an unauthenticated header. 3.x still decrypts it, but
-only without associated data. It never writes format 1.
+Format 1 has two layouts behind the same format byte. 3.x still decrypts both, only without associated data, and
+never writes either:
+
+- **2.0.1**: the format-2 layout with `0x01`, without the header in the associated data.
+- **2.0.0**: `0x01`, a 16-byte IV, AES-CBC/PKCS5Padding data, and an HMAC-SHA256 (keyed with the AES key) over IV and
+  data. The HMAC is checked in constant time before anything is decrypted, which is also how the two layouts are told
+  apart.
 
 **Key usage limit:** with random nonces, encrypt no more than 2<sup>32</sup> messages with one key (NIST SP 800-38D).
 Rotate keys well before that.
 
 ## Migrating from 2.x
 
-3.0.0 is a breaking release. Data encrypted by 2.0.x stays readable.
+3.0.0 is a breaking release. Data encrypted by 2.0.0 (AES-CBC with HMAC) and by 2.0.1 (AES-GCM) stays readable.
 
 | 2.x | 3.0.0 |
 |---|---|
@@ -115,7 +121,7 @@ Rotate keys well before that.
 | PBKDF2 with 65,536 iterations | 600,000 (OWASP). **A key derived from the same password and salt is different.** |
 | Any non-empty salt | At least 16 bytes |
 | Empty plaintext rejected | Empty plaintext allowed |
-| Writes format 1 | Writes format 2, reads both |
+| Writes format 1 (2.0.0: CBC with HMAC; 2.0.1: GCM) | Writes format 2, reads all three |
 
 **Keys derived from a password in 2.x:** derive them with the old iteration count to read existing data:
 
@@ -129,7 +135,8 @@ To move to the stronger derivation, decrypt with the legacy key and re-encrypt w
 
 ## Snapshots
 
-Every merge to `master` is published as a SNAPSHOT to the Central Portal snapshot repository:
+Merges to `master` are published as SNAPSHOTs to the Central Portal snapshot repository when the repository has the
+Central Portal token. CI skips the step with a notice when it does not, which is the case today. To use one:
 
 ```xml
 <repositories>

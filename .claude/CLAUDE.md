@@ -24,8 +24,10 @@ and must stay true when behaviour changes, including the ciphertext format table
     caller-supplied nonce, a counter, or a reused nonce.
   - Format 2: the 13-byte header (format byte and nonce) is the first associated data, so a format byte cannot be
     changed unnoticed.
-  - **Format 1 (2.0.x) stays decryptable**, without associated data. `LegacyFormatTest` holds known answers produced
-    by the released 2.0.1 code; never change those fixtures to make a test pass.
+  - **Format 1 stays decryptable** in both of its layouts, without associated data: 2.0.0 (AES-CBC/PKCS5 with an
+    HMAC-SHA256 keyed with the AES key, checked in constant time before any decryption) and 2.0.1 (AES-GCM). Neither is
+    ever written. `LegacyFormatTest` holds known answers produced by the released 2.0.0 and 2.0.1 code; never change
+    those fixtures to make a test pass.
   - A new format gets a new format byte. Existing formats are never changed.
   - PBKDF2-HMAC-SHA256 at the OWASP iteration count (`PBKDF2_ITERATIONS`). Salts must be at least 16 bytes. Below
     `LEGACY_PBKDF2_ITERATIONS` is rejected.
@@ -34,8 +36,9 @@ and must stay true when behaviour changes, including the ciphertext format table
   - Nothing is returned from a failed decryption. A key, password or plaintext never appears in an exception
     message. Nothing is logged.
   - Intermediate key and password material is cleared. The caller's arrays are never modified.
-- **Publishing.** Every merge to `master` publishes a SNAPSHOT to the Central Portal snapshot repository (`ci.yml`,
-  step "Publish SNAPSHOT"). Releases go through the Central Portal (profiles `central,sign`), only with the owner's
+- **Publishing.** Merges to `master` publish a SNAPSHOT to the Central Portal snapshot repository (`ci.yml`, step
+  "Publish SNAPSHOT") when the organisation shares the `CENTRAL_TOKEN_*` secrets with this repository. Today it does
+  not (owner's decision, 2026-11-17), so the step skips with a notice. Make it fail again once the token is shared. Releases go through the Central Portal (profiles `central,sign`), only with the owner's
   approval. CI never publishes a release.
 - **No AI attribution** in commit messages or pull requests.
 

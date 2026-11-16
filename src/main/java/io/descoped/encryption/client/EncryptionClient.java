@@ -3,12 +3,16 @@ package io.descoped.encryption.client;
 import javax.crypto.AEADBadTagException;
 import javax.crypto.Cipher;
 import javax.crypto.KeyGenerator;
+import javax.crypto.Mac;
 import javax.crypto.SecretKey;
 import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.GCMParameterSpec;
+import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.PBEKeySpec;
 import javax.crypto.spec.SecretKeySpec;
+import javax.security.auth.DestroyFailedException;
 import java.security.GeneralSecurityException;
+import java.security.MessageDigest;
 import java.security.SecureRandom;
 import java.util.Arrays;
 import java.util.Objects;
@@ -26,8 +30,11 @@ import java.util.Objects;
  * </pre>
  *
  * <p>The 13-byte header (format byte and nonce) is authenticated together with the caller's optional associated
- * data, so the format byte cannot be changed without decryption failing. Ciphertexts in format 1, written by
- * 2.0.x, are still decrypted.
+ * data, so the format byte cannot be changed without decryption failing.
+ *
+ * <p>Format 1 is still decrypted, never written. It has two layouts behind the same format byte: 2.0.0 wrote
+ * AES-CBC/PKCS5Padding with an HMAC-SHA256 over IV and data (encrypt-then-MAC, keyed with the AES key), and 2.0.1
+ * wrote AES-GCM like format 2 but without associated data. The HMAC is checked before CBC decryption.
  *
  * <p>Instances are immutable and thread-safe. A {@code Cipher} and a {@code SecretKeyFactory} are created per call,
  * because neither is safe for concurrent use.
@@ -44,8 +51,8 @@ public final class EncryptionClient {
     public static final int PBKDF2_ITERATIONS = 600_000;
 
     /**
-     * PBKDF2 iterations used by 2.0.x. Pass it to {@link #deriveKey(char[], byte[], int)} to derive the keys that
-     * existing 2.0.x data was encrypted with. It is also the lowest iteration count accepted.
+     * PBKDF2 iterations used by 2.0.0 and 2.0.1. Pass it to {@link #deriveKey(char[], byte[], int)} to derive the keys
+     * that existing 2.x data was encrypted with. It is also the lowest iteration count accepted.
      */
     public static final int LEGACY_PBKDF2_ITERATIONS = 65_536;
 
@@ -60,6 +67,11 @@ public final class EncryptionClient {
     static final int NONCE_LENGTH = 12;
     static final int TAG_LENGTH = 16;
     static final int HEADER_LENGTH = 1 + NONCE_LENGTH;
+
+    private static final String LEGACY_CIPHER = "AES/CBC/PKCS5Padding";
+    private static final String LEGACY_HMAC = "HmacSHA256";
+    private static final int LEGACY_IV_LENGTH = 16;
+    private static final int LEGACY_HMAC_LENGTH = 32;
 
     private static final String CIPHER = "AES/GCM/NoPadding";
     private static final String KDF = "PBKDF2WithHmacSHA256";
@@ -91,6 +103,7 @@ public final class EncryptionClient {
      * password.
      *
      * @return a new key of this client's size
+     * @throws IllegalStateException if the platform has no AES key generator
      */
     public SecretKey generateKey() {
         try {
@@ -122,6 +135,7 @@ public final class EncryptionClient {
      * @param salt     at least {@value #SALT_LENGTH} bytes, unique per password
      * @return the derived key
      * @throws IllegalArgumentException if the password is empty or the salt is too short
+     * @throws IllegalStateException    if the platform has no PBKDF2-HMAC-SHA256
      */
     public SecretKey deriveKey(char[] password, byte[] salt) {
         return deriveKey(password, salt, PBKDF2_ITERATIONS);
@@ -137,6 +151,7 @@ public final class EncryptionClient {
      * @return the derived key
      * @throws IllegalArgumentException if the password is empty, the salt is too short or the iteration count is
      *                                  too low
+     * @throws IllegalStateException    if the platform has no PBKDF2-HMAC-SHA256
      */
     public SecretKey deriveKey(char[] password, byte[] salt, int iterations) {
         Objects.requireNonNull(password, "password");
@@ -151,9 +166,11 @@ public final class EncryptionClient {
             throw new IllegalArgumentException("Iterations must be at least " + LEGACY_PBKDF2_ITERATIONS + ", was " + iterations);
         }
         PBEKeySpec spec = new PBEKeySpec(password, salt, iterations, algorithm.getKeySize());
+        SecretKey derived = null;
         byte[] encoded = null;
         try {
-            encoded = SecretKeyFactory.getInstance(KDF).generateSecret(spec).getEncoded();
+            derived = SecretKeyFactory.getInstance(KDF).generateSecret(spec);
+            encoded = derived.getEncoded();
             return new SecretKeySpec(encoded, "AES");
         } catch (GeneralSecurityException e) {
             throw new IllegalStateException(KDF + " is not available", e);
@@ -162,6 +179,7 @@ public final class EncryptionClient {
             if (encoded != null) {
                 Arrays.fill(encoded, (byte) 0);
             }
+            destroy(derived);
         }
     }
 
@@ -231,10 +249,10 @@ public final class EncryptionClient {
     }
 
     /**
-     * Verifies and decrypts a ciphertext made by {@link #encrypt(SecretKey, byte[])} or by 2.0.x.
+     * Verifies and decrypts a ciphertext made by {@link #encrypt(SecretKey, byte[])}, or by 2.0.0 or 2.0.1.
      *
      * @param key        the key the data was encrypted with
-     * @param ciphertext a ciphertext in format 2, or in format 1 from 2.0.x
+     * @param ciphertext a ciphertext in format 2, or in format 1 from 2.0.0 or 2.0.1
      * @return the plaintext
      * @throws IllegalArgumentException if the key is not an AES key of this client's size
      * @throws DecryptionException      if the ciphertext is malformed, was encrypted with another key or associated
@@ -249,8 +267,8 @@ public final class EncryptionClient {
      * unless the whole ciphertext and the associated data are authentic.
      *
      * @param key            the key the data was encrypted with
-     * @param ciphertext     a ciphertext in format 2, or in format 1 from 2.0.x (which only accepts empty associated
-     *                       data)
+     * @param ciphertext     a ciphertext in format 2, or in format 1 from 2.0.0 or 2.0.1 (which only accepts empty
+     *                       associated data)
      * @param associatedData the associated data given to encrypt; may be empty
      * @return the plaintext
      * @throws IllegalArgumentException if the key is not an AES key of this client's size
@@ -271,6 +289,13 @@ public final class EncryptionClient {
         if (format == FORMAT_1 && associatedData.length > 0) {
             throw new DecryptionException("Ciphertext format 1 cannot carry associated data");
         }
+        if (format == FORMAT_1 && isLegacyCbcLayout(ciphertext)) {
+            byte[] plaintext = decryptLegacyCbc(key, ciphertext);
+            if (plaintext != null) {
+                return plaintext;
+            }
+            // The HMAC did not match: a 2.0.1 GCM ciphertext of the same length, or a failure reported below.
+        }
         try {
             Cipher cipher = Cipher.getInstance(CIPHER);
             cipher.init(Cipher.DECRYPT_MODE, key, new GCMParameterSpec(TAG_LENGTH * 8, ciphertext, 1, NONCE_LENGTH));
@@ -285,6 +310,62 @@ public final class EncryptionClient {
             throw new DecryptionException("Authentication failed: wrong key or associated data, or the ciphertext was changed", e);
         } catch (GeneralSecurityException e) {
             throw new DecryptionException("Decryption failed", e);
+        }
+    }
+
+    /**
+     * Whether a format-1 ciphertext has the length of the 2.0.0 layout: format byte, 16-byte IV, a whole number of
+     * (at least one) AES-CBC blocks, 32-byte HMAC-SHA256. A 2.0.1 GCM ciphertext can have the same length; the HMAC
+     * tells them apart.
+     */
+    private static boolean isLegacyCbcLayout(byte[] ciphertext) {
+        int blocks = ciphertext.length - 1 - LEGACY_IV_LENGTH - LEGACY_HMAC_LENGTH;
+        return blocks >= LEGACY_IV_LENGTH && blocks % LEGACY_IV_LENGTH == 0;
+    }
+
+    /**
+     * Decrypts the 2.0.0 layout (encrypt-then-MAC: AES-CBC/PKCS5Padding, then HMAC-SHA256 keyed with the AES key over
+     * IV and encrypted data). The HMAC is checked in constant time before anything is decrypted, so the padding is
+     * never examined for unauthenticated data. Read only: this layout is never written.
+     *
+     * @return the plaintext, or {@code null} if the HMAC does not match
+     */
+    private static byte[] decryptLegacyCbc(SecretKey key, byte[] ciphertext) {
+        byte[] encoded = key.getEncoded();
+        if (encoded == null) {
+            return null;
+        }
+        int dataLength = ciphertext.length - 1 - LEGACY_IV_LENGTH - LEGACY_HMAC_LENGTH;
+        try {
+            Mac mac = Mac.getInstance(LEGACY_HMAC);
+            mac.init(new SecretKeySpec(encoded, LEGACY_HMAC));
+            mac.update(ciphertext, 1, LEGACY_IV_LENGTH + dataLength);
+            byte[] expected = Arrays.copyOfRange(ciphertext, ciphertext.length - LEGACY_HMAC_LENGTH, ciphertext.length);
+            if (!MessageDigest.isEqual(mac.doFinal(), expected)) {
+                return null;
+            }
+            Cipher cipher = Cipher.getInstance(LEGACY_CIPHER);
+            cipher.init(Cipher.DECRYPT_MODE, key, new IvParameterSpec(ciphertext, 1, LEGACY_IV_LENGTH));
+            return cipher.doFinal(ciphertext, 1 + LEGACY_IV_LENGTH, dataLength);
+        } catch (GeneralSecurityException e) {
+            throw new DecryptionException("Decryption failed", e);
+        } finally {
+            Arrays.fill(encoded, (byte) 0);
+        }
+    }
+
+    /**
+     * Clears the provider's intermediate key now rather than when it is garbage collected. A provider whose keys
+     * cannot be destroyed leaves it to the collector.
+     */
+    private static void destroy(SecretKey key) {
+        if (key == null || key.isDestroyed()) {
+            return;
+        }
+        try {
+            key.destroy();
+        } catch (DestroyFailedException e) {
+            // Not supported by this provider: the key is cleared when it is collected.
         }
     }
 
