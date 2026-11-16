@@ -1,7 +1,6 @@
+/**
+ * Authenticated encryption with AES-GCM and password-based key derivation with PBKDF2, on the JDK alone.
+ */
 module io.descoped.encryption.util {
-
-    requires java.base;
-    requires org.slf4j;
-
     exports io.descoped.encryption.client;
 }

@@ -1,43 +1,13 @@
+# Build output
+target/
+
+# IDE
 /.idea
 *.iml
+.vscode/
 
-/target
+# macOS
+.DS_Store
 
-/tx-logs
-/neo4jdb
-
-/loadtest_target/
-
-# Compiled class file
-*.class
-
-# Log file
-*.log
-
-
-# BlueJ files
-*.ctxt
-
-# Mobile Tools for Java (J2ME)
-.mtj.tmp/
-
-# Package Files #
-*.jar
-*.war
-*.nar
-*.ear
-*.zip
-*.tar.gz
-*.rar
-
-# virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
+# JVM crash logs
 hs_err_pid*
-
-.idea/
-target/maven-archiver/
-
-dependency-reduced-pom.xml
-
-**/target
-
-**/certs
