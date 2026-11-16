@@ -115,9 +115,9 @@ Rotate keys well before that.
 |---|---|
 | Java 11 | Java 17 |
 | Depends on `slf4j-api`; failures logged at ERROR | No dependencies, no logging |
-| `encrypt(byte[] key, byte[] data)` / `decrypt(byte[] key, byte[] data)` | `encrypt(SecretKey, byte[])` / `decrypt(SecretKey, byte[])`. Wrap raw bytes with `importKey(byte[])` |
+| `encrypt(byte[] key, byte[] data)` (2.0.1), `encrypt(byte[] key, byte[] iv, byte[] data)` (2.0.0), `decrypt(byte[] key, byte[] data)` | `encrypt(SecretKey, byte[])` / `decrypt(SecretKey, byte[])`. Wrap raw bytes with `importKey(byte[])` |
 | `generateSecretKey(password, salt)` | `deriveKey(password, salt)` |
-| `generateNonce()` | Removed: `encrypt` makes the nonce |
+| `generateNonce()` (2.0.1), `generateIV()` (2.0.0) | Removed: `encrypt` makes the nonce |
 | PBKDF2 with 65,536 iterations | 600,000 (OWASP). **A key derived from the same password and salt is different.** |
 | Any non-empty salt | At least 16 bytes |
 | Empty plaintext rejected | Empty plaintext allowed |
@@ -132,6 +132,11 @@ byte[] plaintext = client.decrypt(legacyKey, oldCiphertext);
 
 To move to the stronger derivation, decrypt with the legacy key and re-encrypt with
 `client.deriveKey(password, newSalt)`. Random or imported keys work unchanged.
+
+2.x accepted salts shorter than 16 bytes; 3.0.0 does not, even with the legacy iteration count. If your salt is shorter,
+derive the legacy key with the JDK (`SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256")`, 65,536 iterations,
+`PBEKeySpec` with your key size), pass its bytes to `client.importKey(...)` to read the old data, and re-encrypt under a
+key derived from a new 16-byte salt.
 
 ## Snapshots
 
