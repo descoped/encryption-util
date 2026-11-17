@@ -40,7 +40,6 @@ and must stay true when behaviour changes, including the ciphertext format table
   "Publish SNAPSHOT") when the organisation shares the `CENTRAL_TOKEN_*` secrets with this repository. Today it does
   not (owner's decision, 2026-11-17), so the step skips with a notice. Make it fail again once the token is shared. Releases go through the Central Portal (profiles `central,sign`), only with the owner's
   approval. CI never publishes a release.
-- **No AI attribution** in commit messages or pull requests.
 
 ## Testing
 
