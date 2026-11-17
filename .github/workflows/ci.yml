@@ -59,11 +59,11 @@ jobs:
 
       - name: Build, test and Javadoc
         if: github.event_name != 'push'
-        run: mvn --batch-mode --no-transfer-progress verify javadoc:javadoc
+        run: ./mvnw --batch-mode --no-transfer-progress verify javadoc:javadoc
 
       - name: Build, test, Javadoc and coverage
         if: github.event_name == 'push'
-        run: mvn --batch-mode --no-transfer-progress verify javadoc:javadoc -P coverage
+        run: ./mvnw --batch-mode --no-transfer-progress verify javadoc:javadoc -P coverage
 
       # Analysis only: a SonarCloud outage or token problem must not stop the SNAPSHOT, so this step does not gate.
       - name: SonarCloud
@@ -71,7 +71,7 @@ jobs:
         continue-on-error: true
         env:
           SONAR_TOKEN: ${{ secrets.SONARCLOUD_TOKEN }}
-        run: mvn --batch-mode --no-transfer-progress -P sonar org.sonarsource.scanner.maven:sonar-maven-plugin:sonar
+        run: ./mvnw --batch-mode --no-transfer-progress -P sonar org.sonarsource.scanner.maven:sonar-maven-plugin:sonar
 
       - name: JPMS consumer smoke test
         run: src/it/consumer/run.sh
@@ -106,4 +106,4 @@ jobs:
                   echo "::error::master is at $version, not a SNAPSHOT, and this is not a release commit"; exit 1 ;;
               esac ;;
           esac
-          mvn --batch-mode --no-transfer-progress deploy -P central -DskipTests
+          ./mvnw --batch-mode --no-transfer-progress deploy -P central -DskipTests
