@@ -42,6 +42,14 @@ and must stay true when behaviour changes, including the ciphertext format table
   approval. CI never publishes a release.
 - **No AI attribution** in commit messages or pull requests.
 
+## Testing
+
+- Unit tests (JUnit 6) are a module of their own, `io.descoped.encryption.util.test` (`src/test/java/module-info.java`),
+  in package `io.descoped.encryption.client.test`. It requires the library, so surefire and IntelliJ run the tests on
+  the module path and they reach only the exported API. It is `open` for JUnit only. Never put tests in the library's
+  package (a split package): IntelliJ then runs them inside the library module, where `org.junit.jupiter.api` is not
+  resolved. The tests write the ciphertext layout out as their own constants and do not read the library's.
+
 ## Commands
 
 ```sh
