@@ -36,7 +36,7 @@ class EncryptionClientTest {
     private static final int TAG_LENGTH = 16;
     private static final int HEADER_LENGTH = 1 + NONCE_LENGTH;
 
-    private static final byte[] PAYLOAD ="{\"data\" : \"somevalue\"}".getBytes(StandardCharsets.UTF_8);
+    private static final byte[] PAYLOAD = "{\"data\" : \"somevalue\"}".getBytes(StandardCharsets.UTF_8);
     private static final byte[] CONTEXT = "record-42".getBytes(StandardCharsets.UTF_8);
 
     @ParameterizedTest
