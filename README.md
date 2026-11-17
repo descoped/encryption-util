@@ -159,6 +159,11 @@ Central Portal token. CI skips the step with a notice when it does not, which is
 
 Build with JDK 17 or newer and Maven 3.6.3 or newer (not Maven 4 yet).
 
+Builds are reproducible from the next release on: the jars from a release tag, built with the same major JDK as
+the release (the manifest's `Build-Jdk-Spec`), are byte for byte the ones on Maven Central. Check with
+`git checkout <tag> && mvn -P central package -DskipTests` and compare the SHA-256 of `target/*.jar` with the
+`.sha256` files on repo1.maven.org.
+
 ```sh
 mvn verify                    # compile with -Xlint:all -Werror, tests (JUnit 6)
 mvn verify javadoc:javadoc    # plus Javadoc with doclint; warnings fail the build
