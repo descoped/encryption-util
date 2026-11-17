@@ -139,21 +139,6 @@ derive the legacy key with the JDK (`SecretKeyFactory.getInstance("PBKDF2WithHma
 `PBEKeySpec` with your key size), pass its bytes to `client.importKey(...)` to read the old data, and re-encrypt under a
 key derived from a new 16-byte salt.
 
-## Snapshots
-
-Merges to `master` are published as SNAPSHOTs to the Central Portal snapshot repository. To use one:
-
-```xml
-<repositories>
-    <repository>
-        <id>central-portal-snapshots</id>
-        <url>https://central.sonatype.com/repository/maven-snapshots/</url>
-        <releases><enabled>false</enabled></releases>
-        <snapshots><enabled>true</enabled></snapshots>
-    </repository>
-</repositories>
-```
-
 ## Building
 
 Build with JDK 17 or newer. `./mvnw` (the Maven Wrapper) downloads the pinned Maven, 3.10.1, and checks its SHA-256;

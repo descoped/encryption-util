@@ -36,10 +36,9 @@ and must stay true when behaviour changes, including the ciphertext format table
   - Nothing is returned from a failed decryption. A key, password or plaintext never appears in an exception
     message. Nothing is logged.
   - Intermediate key and password material is cleared. The caller's arrays are never modified.
-- **Publishing.** Merges to `master` publish a SNAPSHOT to the Central Portal snapshot repository (`ci.yml`, step
-  "Publish SNAPSHOT", with `-Dmaven.repository.credentialScope=id` because Maven 3.10 would otherwise bind the
-  `central` credentials to Maven Central's host). Releases go through the Central Portal (profiles `central,sign`),
-  only with the owner's approval. CI never publishes a release.
+- **Publishing.** CI publishes nothing: no SNAPSHOTs (the Central Portal's monthly publishing quota is kept for
+  releases) and never a release. CI holds no Central token. Releases go through the Central Portal (profiles
+  `central,sign`) from the owner's machine, only with the owner's approval.
 
 ## Testing
 
