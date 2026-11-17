@@ -138,7 +138,7 @@ jobs:
           claude_args: >-
             --model opus
             --disallowedTools "Agent"
-            --allowedTools "Bash(gh pr diff:*),Bash(gh pr view:*),Bash(gh issue view:*),Bash(git diff:*),Bash(git log:*),Bash(git show:*),Bash(git status:*),Bash(mvn --batch-mode --no-transfer-progress verify:*),Bash(mvn --batch-mode --no-transfer-progress package:*),Bash(src/it/consumer/run.sh)"
-            --append-system-prompt "Read .claude/CLAUDE.md before changing anything. When you change code, run mvn --batch-mode --no-transfer-progress verify javadoc:javadoc and then src/it/consumer/run.sh, and push only when both pass; say plainly when they do not. Never add AI attribution to a commit message or to pull request text: no Generated-with line, no Co-Authored-By line, no session link."
+            --allowedTools "Bash(gh pr diff:*),Bash(gh pr view:*),Bash(gh issue view:*),Bash(git diff:*),Bash(git log:*),Bash(git show:*),Bash(git status:*),Bash(./mvnw --batch-mode --no-transfer-progress verify:*),Bash(./mvnw --batch-mode --no-transfer-progress package:*),Bash(src/it/consumer/run.sh)"
+            --append-system-prompt "Read .claude/CLAUDE.md before changing anything. When you change code, run ./mvnw --batch-mode --no-transfer-progress verify javadoc:javadoc and then src/it/consumer/run.sh, and push only when both pass; say plainly when they do not. Never add AI attribution to a commit message or to pull request text: no Generated-with line, no Co-Authored-By line, no session link."
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           track_progress: true
