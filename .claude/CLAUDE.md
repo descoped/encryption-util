@@ -64,5 +64,5 @@ and must stay true when behaviour changes, including the ciphertext format table
 ./mvnw verify javadoc:javadoc    # plus Javadoc with doclint, warnings fail the build
 src/it/consumer/run.sh           # after package: a separate named module uses the jar, module path and class path
 ./mvnw verify -P coverage        # JaCoCo report in target/site/jacoco
-./mvnw deploy -P central,secrets  # SNAPSHOT to the Central Portal by hand (the token comes from ~/.mavenrc)
+./mvnw deploy -P central,secrets # SNAPSHOT to the Central Portal by hand (the token comes from ~/.mavenrc)
 ```

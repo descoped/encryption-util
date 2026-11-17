@@ -169,7 +169,7 @@ and javadoc) with the `.sha256` files on repo1.maven.org. The `.asc` signatures 
 
 ```sh
 ./mvnw verify                 # compile with -Xlint:all -Werror, tests (JUnit 6)
-./mvnw verify javadoc:javadoc  # plus Javadoc with doclint; warnings fail the build
+./mvnw verify javadoc:javadoc # plus Javadoc with doclint; warnings fail the build
 src/it/consumer/run.sh        # after package: a separate named module uses the jar, on the module and class path
 ./mvnw verify -P coverage     # JaCoCo report in target/site/jacoco
 ```

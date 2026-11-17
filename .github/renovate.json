@@ -22,6 +22,18 @@
         "java-jdk"
       ],
       "enabled": false
+    },
+    {
+      "description": "Maven bumps through the wrapper: Renovate does not update distributionSha256Sum, so CI fails until it is set by hand (see .claude/CLAUDE.md, Maven Wrapper)",
+      "matchManagers": [
+        "maven-wrapper"
+      ],
+      "labels": [
+        "maven-wrapper"
+      ],
+      "prBodyNotes": [
+        "Update `distributionSha256Sum` in `.mvn/wrapper/maven-wrapper.properties` to the SHA-256 of the new `apache-maven-<version>-bin.zip`, after checking the zip against Maven's published `.sha512`."
+      ]
     }
   ],
   "vulnerabilityAlerts": {
