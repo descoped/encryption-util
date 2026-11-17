@@ -37,9 +37,9 @@ and must stay true when behaviour changes, including the ciphertext format table
     message. Nothing is logged.
   - Intermediate key and password material is cleared. The caller's arrays are never modified.
 - **Publishing.** Merges to `master` publish a SNAPSHOT to the Central Portal snapshot repository (`ci.yml`, step
-  "Publish SNAPSHOT") when the organisation shares the `CENTRAL_TOKEN_*` secrets with this repository. Today it does
-  not (owner's decision, 2026-11-17), so the step skips with a notice. Make it fail again once the token is shared. Releases go through the Central Portal (profiles `central,sign`), only with the owner's
-  approval. CI never publishes a release.
+  "Publish SNAPSHOT", with `-Dmaven.repository.credentialScope=id` because Maven 3.10 would otherwise bind the
+  `central` credentials to Maven Central's host). Releases go through the Central Portal (profiles `central,sign`),
+  only with the owner's approval. CI never publishes a release.
 
 ## Testing
 

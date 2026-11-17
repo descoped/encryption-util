@@ -141,8 +141,7 @@ key derived from a new 16-byte salt.
 
 ## Snapshots
 
-Merges to `master` are published as SNAPSHOTs to the Central Portal snapshot repository when the repository has the
-Central Portal token. CI skips the step with a notice when it does not, which is the case today. To use one:
+Merges to `master` are published as SNAPSHOTs to the Central Portal snapshot repository. To use one:
 
 ```xml
 <repositories>
