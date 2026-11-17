@@ -64,3 +64,7 @@ src/it/consumer/run.sh           # after package: a separate named module uses t
 ./mvnw verify -P coverage        # JaCoCo report in target/site/jacoco
 ./mvnw deploy -P central,secrets # SNAPSHOT to the Central Portal by hand (the token comes from ~/.mavenrc)
 ```
+
+A SNAPSHOT by hand needs the `central` token sent to `central.sonatype.com`. Maven 3.10 binds a server's credentials to
+the hosts it knows for that id, and `central` is also Maven Central's id, so either `settings.xml` lists
+`central.sonatype.com` for that server (the owner's does) or the command adds `-Dmaven.repository.credentialScope=id`.
