@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # JPMS consumer smoke test: compiles a small named module against the built library jar and runs it on the module
-# path and on the class path. Run after `mvn package`.
+# path and on the class path. Run after `./mvnw package`.
 set -euo pipefail
 
 root=$(cd "$(dirname "$0")/../../.." && pwd)

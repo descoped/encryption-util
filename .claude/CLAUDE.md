@@ -50,12 +50,19 @@ and must stay true when behaviour changes, including the ciphertext format table
   package (a split package): IntelliJ then runs them inside the library module, where `org.junit.jupiter.api` is not
   resolved. The tests write the ciphertext layout out as their own constants and do not read the library's.
 
+## Maven Wrapper
+
+- `./mvnw` pins Maven (`.mvn/wrapper/maven-wrapper.properties`, type `only-script`, so no jar in the repository) and
+  checks the download against `distributionSha256Sum`. CI runs `./mvnw`. When Maven is bumped, by Renovate or by hand,
+  set `distributionSha256Sum` to the SHA-256 of the new `apache-maven-<version>-bin.zip`, after checking that zip
+  against the `.sha512` Maven publishes next to it. A stale checksum fails the build, it never skips the check.
+
 ## Commands
 
 ```sh
-mvn verify                       # compile with -Xlint:all -Werror, tests on the module path (JUnit 6)
-mvn verify javadoc:javadoc       # plus Javadoc with doclint, warnings fail the build
+./mvnw verify                    # compile with -Xlint:all -Werror, tests on the module path (JUnit 6)
+./mvnw verify javadoc:javadoc    # plus Javadoc with doclint, warnings fail the build
 src/it/consumer/run.sh           # after package: a separate named module uses the jar, module path and class path
-mvn verify -P coverage           # JaCoCo report in target/site/jacoco
-mvn deploy -P central,secrets    # SNAPSHOT to the Central Portal by hand (the token comes from ~/.mavenrc)
+./mvnw verify -P coverage        # JaCoCo report in target/site/jacoco
+./mvnw deploy -P central,secrets # SNAPSHOT to the Central Portal by hand (the token comes from ~/.mavenrc)
 ```

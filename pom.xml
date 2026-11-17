@@ -80,8 +80,8 @@
 
     <profiles>
         <!-- Publishing to Maven Central through the Central Portal.
-             Snapshot (no signing needed): mvn deploy -P central,secrets
-             Release (Ove approves each one): mvn release:prepare release:perform -P secrets
+             Snapshot (no signing needed): ./mvnw deploy -P central,secrets
+             Release (Ove approves each one): ./mvnw release:prepare release:perform -P secrets
              Releases are uploaded with autoPublish=false and published by hand in the Portal. -->
         <profile>
             <id>central</id>
