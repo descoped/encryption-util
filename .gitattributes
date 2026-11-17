@@ -1,0 +1,3 @@
+# LF everywhere, so a checkout on any OS builds the same sources jar (reproducible builds).
+* text=auto eol=lf
+*.jar binary
