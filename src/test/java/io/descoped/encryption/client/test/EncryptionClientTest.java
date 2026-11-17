@@ -1,5 +1,8 @@
-package io.descoped.encryption.client;
+package io.descoped.encryption.client.test;
 
+import io.descoped.encryption.client.Algorithm;
+import io.descoped.encryption.client.DecryptionException;
+import io.descoped.encryption.client.EncryptionClient;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
@@ -25,7 +28,15 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class EncryptionClientTest {
 
-    private static final byte[] PAYLOAD = "{\"data\" : \"somevalue\"}".getBytes(StandardCharsets.UTF_8);
+    // The ciphertext layout, written out here rather than read from the library, so a change to the format fails a
+    // test: format byte | nonce (12) | ciphertext | tag (16).
+    private static final byte FORMAT_1 = 1;
+    private static final byte FORMAT_2 = 2;
+    private static final int NONCE_LENGTH = 12;
+    private static final int TAG_LENGTH = 16;
+    private static final int HEADER_LENGTH = 1 + NONCE_LENGTH;
+
+    private static final byte[] PAYLOAD ="{\"data\" : \"somevalue\"}".getBytes(StandardCharsets.UTF_8);
     private static final byte[] CONTEXT = "record-42".getBytes(StandardCharsets.UTF_8);
 
     @ParameterizedTest
@@ -61,8 +72,8 @@ class EncryptionClientTest {
 
         byte[] ciphertext = client.encrypt(client.generateKey(), PAYLOAD);
 
-        assertEquals(EncryptionClient.FORMAT_2, ciphertext[0]);
-        assertEquals(EncryptionClient.HEADER_LENGTH + PAYLOAD.length + EncryptionClient.TAG_LENGTH, ciphertext.length);
+        assertEquals(FORMAT_2, ciphertext[0]);
+        assertEquals(HEADER_LENGTH + PAYLOAD.length + TAG_LENGTH, ciphertext.length);
     }
 
     @Test
@@ -72,7 +83,7 @@ class EncryptionClientTest {
         Set<String> nonces = new HashSet<>();
         for (int i = 0; i < 1000; i++) {
             byte[] ciphertext = client.encrypt(key, PAYLOAD);
-            nonces.add(Arrays.toString(Arrays.copyOfRange(ciphertext, 1, 1 + EncryptionClient.NONCE_LENGTH)));
+            nonces.add(Arrays.toString(Arrays.copyOfRange(ciphertext, 1, 1 + NONCE_LENGTH)));
         }
         assertEquals(1000, nonces.size());
     }
@@ -117,7 +128,7 @@ class EncryptionClientTest {
         EncryptionClient client = new EncryptionClient(Algorithm.AES256);
         SecretKey key = client.generateKey();
         byte[] ciphertext = client.encrypt(key, PAYLOAD);
-        ciphertext[0] = EncryptionClient.FORMAT_1;
+        ciphertext[0] = FORMAT_1;
 
         assertThrows(DecryptionException.class, () -> client.decrypt(key, ciphertext));
     }

@@ -1,5 +1,8 @@
-package io.descoped.encryption.client;
+package io.descoped.encryption.client.test;
 
+import io.descoped.encryption.client.Algorithm;
+import io.descoped.encryption.client.DecryptionException;
+import io.descoped.encryption.client.EncryptionClient;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 
