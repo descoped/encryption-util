@@ -36,10 +36,9 @@ and must stay true when behaviour changes, including the ciphertext format table
   - Nothing is returned from a failed decryption. A key, password or plaintext never appears in an exception
     message. Nothing is logged.
   - Intermediate key and password material is cleared. The caller's arrays are never modified.
-- **Publishing.** Merges to `master` publish a SNAPSHOT to the Central Portal snapshot repository (`ci.yml`, step
-  "Publish SNAPSHOT", with `-Dmaven.repository.credentialScope=id` because Maven 3.10 would otherwise bind the
-  `central` credentials to Maven Central's host). Releases go through the Central Portal (profiles `central,sign`),
-  only with the owner's approval. CI never publishes a release.
+- **Publishing.** CI publishes nothing: no SNAPSHOTs (the Central Portal's monthly publishing quota is kept for
+  releases) and never a release. CI holds no Central token. Releases go through the Central Portal (profiles
+  `central,sign`) from the owner's machine, only with the owner's approval.
 
 ## Testing
 
@@ -65,3 +64,7 @@ src/it/consumer/run.sh           # after package: a separate named module uses t
 ./mvnw verify -P coverage        # JaCoCo report in target/site/jacoco
 ./mvnw deploy -P central,secrets # SNAPSHOT to the Central Portal by hand (the token comes from ~/.mavenrc)
 ```
+
+A SNAPSHOT by hand needs the `central` token sent to `central.sonatype.com`. Maven 3.10 binds a server's credentials to
+the hosts it knows for that id, and `central` is also Maven Central's id, so either `settings.xml` lists
+`central.sonatype.com` for that server (the owner's does) or the command adds `-Dmaven.repository.credentialScope=id`.
