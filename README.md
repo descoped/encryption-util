@@ -2,6 +2,7 @@
 
 ![Build Status](https://img.shields.io/github/actions/workflow/status/descoped/encryption-util/ci.yml?branch=master)
 ![Latest Tag](https://img.shields.io/github/v/tag/descoped/encryption-util)
+[![Maven Central](https://img.shields.io/maven-metadata/v?metadataUrl=https%3A%2F%2Frepo1.maven.org%2Fmaven2%2Fio%2Fdescoped%2Fencryption%2Fencryption-util%2Fmaven-metadata.xml&label=maven%20central)](https://central.sonatype.com/artifact/io.descoped.encryption/encryption-util)
 ![Renovate](https://img.shields.io/badge/renovate-enabled-brightgreen.svg)
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=descoped_encryption-util&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=descoped_encryption-util)
 [![Coverage](https://sonarcloud.io/api/project_badges/measure?project=descoped_encryption-util&metric=coverage)](https://sonarcloud.io/summary/new_code?id=descoped_encryption-util)
