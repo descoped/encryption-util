@@ -59,5 +59,7 @@ CI builds the tag (build, tests, coverage, SonarCloud) and publishes nothing for
   commits, but only while nothing for the version is published.
 - **perform failed, or the Portal rejected the deployment:** drop the deployment in the Portal and run
   `./mvnw release:perform -P secrets` again on the same tag (`-Darguments=-DskipTests` is fine; the tag was tested).
+  It reads `release.properties`, which `release:clean` deletes and another machine does not have. Without it, build
+  the tag by hand: `git checkout v<version> && ./mvnw deploy -P central,sign,secrets -DskipTests`.
 - **401 from the Portal:** the token was not sent. Check the `central` server and its `repositoryOrigins`, `-P secrets`,
   and that the token is still valid.
