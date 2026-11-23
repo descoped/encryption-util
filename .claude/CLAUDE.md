@@ -37,8 +37,9 @@ and must stay true when behaviour changes, including the ciphertext format table
     message. Nothing is logged.
   - Intermediate key and password material is cleared. The caller's arrays are never modified.
 - **Publishing.** Releases go only to Maven Central, through the Central Portal (profiles `central,sign`), from the
-  owner's machine and only with the owner's approval. CI publishes nothing to Maven Central, neither SNAPSHOTs nor
-  releases, and holds no Central token. The `central` profile refuses a SNAPSHOT at `validate`.
+  owner's machine and only with the owner's approval, tagged `v<version>`; the procedure is `docs/releasing.md`. CI
+  publishes nothing to Maven Central, neither SNAPSHOTs nor releases, and holds no Central token. The `central`
+  profile refuses a SNAPSHOT at `validate`.
 - **SNAPSHOTs** go only to maven.descoped.io (Descoped's AWS CodeArtifact), from CI's `snapshot` job: on a push to
   master, or by `workflow_dispatch` on a branch as `X.Y.Z-<branch>-SNAPSHOT`. The job names the target on its
   command line (`-DaltSnapshotDeploymentRepository`), and the POM has no `distributionManagement` at all: that is
