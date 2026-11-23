@@ -36,9 +36,14 @@ and must stay true when behaviour changes, including the ciphertext format table
   - Nothing is returned from a failed decryption. A key, password or plaintext never appears in an exception
     message. Nothing is logged.
   - Intermediate key and password material is cleared. The caller's arrays are never modified.
-- **Publishing.** CI publishes nothing: no SNAPSHOTs (the Central Portal's monthly publishing quota is kept for
-  releases) and never a release. CI holds no Central token. Releases go through the Central Portal (profiles
-  `central,sign`) from the owner's machine, only with the owner's approval.
+- **Publishing.** Releases go only to Maven Central, through the Central Portal (profiles `central,sign`), from the
+  owner's machine and only with the owner's approval. CI publishes nothing to Maven Central, neither SNAPSHOTs nor
+  releases, and holds no Central token. The `central` profile refuses a SNAPSHOT at `validate`.
+- **SNAPSHOTs** go only to maven.descoped.io (Descoped's AWS CodeArtifact), from CI's `snapshot` job: on a push to
+  master, or by `workflow_dispatch` on a branch as `X.Y.Z-<branch>-SNAPSHOT`. The job names the target on its
+  command line (`-DaltSnapshotDeploymentRepository`), and the POM has no `distributionManagement` at all: that is
+  what makes a release version fail to deploy there. Never add one. No AWS account ID or CodeArtifact endpoint in
+  any public file (POM, workflow, deployed POM, CI log).
 
 ## Testing
 
@@ -62,9 +67,5 @@ and must stay true when behaviour changes, including the ciphertext format table
 ./mvnw verify javadoc:javadoc    # plus Javadoc with doclint, warnings fail the build
 src/it/consumer/run.sh           # after package: a separate named module uses the jar, module path and class path
 ./mvnw verify -P coverage        # JaCoCo report in target/site/jacoco
-./mvnw deploy -P central,secrets # SNAPSHOT to the Central Portal by hand (the token comes from ~/.mavenrc)
+gh workflow run ci.yml --ref <branch>  # publish X.Y.Z-<branch>-SNAPSHOT to maven.descoped.io
 ```
-
-A SNAPSHOT by hand needs the `central` token sent to `central.sonatype.com`. Maven 3.10 binds a server's credentials to
-the hosts it knows for that id, and `central` is also Maven Central's id, so either `settings.xml` lists
-`central.sonatype.com` for that server (the owner's does) or the command adds `-Dmaven.repository.credentialScope=id`.
