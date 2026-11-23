@@ -139,6 +139,22 @@ derive the legacy key with the JDK (`SecretKeyFactory.getInstance("PBKDF2WithHma
 `PBEKeySpec` with your key size), pass its bytes to `client.importKey(...)` to read the old data, and re-encrypt under a
 key derived from a new 16-byte salt.
 
+## Snapshots
+
+CI publishes SNAPSHOTs to Descoped's public SNAPSHOT repository, `https://maven.descoped.io/`, never to Maven Central:
+`X.Y.Z-SNAPSHOT` from every merge to `master`, and `X.Y.Z-<branch>-SNAPSHOT` when a branch is published by hand. To use
+one, add the repository and depend on `X.Y.Z-SNAPSHOT`, never on a timestamped build: the newest build of every
+SNAPSHOT version is kept, older builds are deleted after 14 days, and a branch SNAPSHOT 30 days after its last build.
+
+```xml
+<repository>
+    <id>descoped-snapshots-public</id>
+    <url>https://maven.descoped.io/</url>
+    <releases><enabled>false</enabled></releases>
+    <snapshots><enabled>true</enabled></snapshots>
+</repository>
+```
+
 ## Building
 
 Build with JDK 17 or newer. `./mvnw` (the Maven Wrapper) downloads the pinned Maven, 3.10.1, and checks its SHA-256;

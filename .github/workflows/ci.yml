@@ -2,8 +2,9 @@ name: CI
 
 # One job on JDK 17, the baseline: every build compiles with `release 17`, so the bytecode does not depend on the
 # JDK, and 17 is the oldest runtime users have. Pull requests: build, tests, Javadoc and the JPMS consumer smoke test.
-# Pushes to master and release tags add coverage and the SonarCloud analysis (not gating). CI publishes nothing:
-# no SNAPSHOTs (the Central Portal's monthly publishing quota is kept for releases) and never a release.
+# Pushes to master and release tags add coverage and the SonarCloud analysis (not gating). The job `snapshot`
+# publishes SNAPSHOTs to maven.descoped.io (Descoped's AWS CodeArtifact): on a push to master, and by workflow_dispatch
+# on a branch as X.Y.Z-<branch>-SNAPSHOT. Nothing goes to Maven Central from CI, neither SNAPSHOTs nor releases.
 on:
   push:
     branches: [master]
@@ -30,10 +31,12 @@ on:
 permissions:
   contents: read
 
-# A newer push to the same pull request or branch ends the run it replaces.
+# A newer push to the same pull request ends the run it replaces. Runs on master and branches are never cancelled, so
+# a SNAPSHOT upload never stops halfway: a newer run waits for the one in progress, and replaces any older run still
+# waiting.
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   build:
@@ -61,7 +64,7 @@ jobs:
         if: github.event_name == 'push'
         run: ./mvnw --batch-mode --no-transfer-progress verify javadoc:javadoc -P coverage
 
-      # Analysis only: a SonarCloud outage or token problem must not fail the build, so this step does not gate.
+      # Analysis only: a SonarCloud outage or token problem must not stop the SNAPSHOT, so this step does not gate.
       - name: SonarCloud
         if: github.event_name == 'push'
         continue-on-error: true
@@ -71,3 +74,113 @@ jobs:
 
       - name: JPMS consumer smoke test
         run: src/it/consumer/run.sh
+
+  snapshot:
+    name: Publish SNAPSHOTs
+    needs: build
+    if: >-
+      (github.event_name == 'push' && github.ref == 'refs/heads/master')
+      || (github.event_name == 'workflow_dispatch' && startsWith(github.ref, 'refs/heads/'))
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    # Two runs on one branch never interleave their uploads of maven-metadata.xml.
+    concurrency:
+      group: snapshot-${{ github.ref }}
+      cancel-in-progress: false
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-java@d1374f8ac74474200d16ef8ecee22c7ae7a51880  # v6.3.0
+        with:
+          java-version: '17'
+          distribution: temurin
+          cache: maven
+
+      - name: Branch version
+        if: github.ref != 'refs/heads/master'
+        env:
+          BRANCH: ${{ github.ref_name }}
+        run: |
+          version=$(./mvnw -q help:evaluate -Dexpression=project.version -DforceStdout)
+          name=$(printf '%s' "$BRANCH" | tr -c 'A-Za-z0-9.' '-')
+          ./mvnw --batch-mode --no-transfer-progress versions:set -DgenerateBackupPoms=false \
+            -DnewVersion="${version%-SNAPSHOT}-${name}-SNAPSHOT"
+
+      # The release plugin pushes its "prepare release" commit (a release version) to master itself; releases are
+      # published by hand, so that commit is skipped. Any other version that is not a SNAPSHOT fails. The POM has no
+      # distributionManagement, so a release version would have nowhere to go in any case.
+      - name: Only a SNAPSHOT
+        id: version
+        run: |
+          version=$(./mvnw -q help:evaluate -Dexpression=project.version -DforceStdout)
+          subject=$(git log -1 --format=%s)
+          case "$version" in
+            *-SNAPSHOT) echo "Publishing $version"; echo "publish=true" >> "$GITHUB_OUTPUT" ;;
+            *)
+              case "$subject" in
+                "[maven-release-plugin] prepare release "*)
+                  echo "::notice::release commit for $version; releases are published by hand, so no SNAPSHOT"
+                  echo "publish=false" >> "$GITHUB_OUTPUT" ;;
+                *) echo "Not a SNAPSHOT: $version"; exit 1 ;;
+              esac ;;
+          esac
+
+      # Last before the deploy, so no other step runs while the role's credentials exist. They are not exported to
+      # the job's environment: only the deploy step gets them, for at most 15 minutes.
+      - id: aws
+        if: steps.version.outputs.publish == 'true'
+        uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd  # v6.3.0
+        with:
+          role-to-assume: ${{ secrets.CODEARTIFACT_SNAPSHOTS_ROLE_ARN }}
+          aws-region: eu-north-1
+          role-duration-seconds: 900
+          output-credentials: true
+          output-env-credentials: false
+
+      # The CodeArtifact token lives 15 minutes and only in this step's shell; settings.xml reads it from there. The
+      # account is the role's own and the publishing endpoint is looked up here, so neither is in a public file; both
+      # are masked in the log. The role's ARN is an organization secret.
+      - name: Deploy
+        if: steps.version.outputs.publish == 'true'
+        env:
+          AWS_ACCESS_KEY_ID: ${{ steps.aws.outputs.aws-access-key-id }}
+          AWS_SECRET_ACCESS_KEY: ${{ steps.aws.outputs.aws-secret-access-key }}
+          AWS_SESSION_TOKEN: ${{ steps.aws.outputs.aws-session-token }}
+          AWS_REGION: eu-north-1
+        run: |
+          account=$(aws sts get-caller-identity --query Account --output text)
+          echo "::add-mask::$account"
+          token=$(aws codeartifact get-authorization-token --domain descoped \
+            --duration-seconds 900 --query authorizationToken --output text)
+          echo "::add-mask::$token"
+          export CODEARTIFACT_AUTH_TOKEN="$token"
+          url=$(aws codeartifact get-repository-endpoint --domain descoped --repository maven-snapshots \
+            --format maven --query repositoryEndpoint --output text)
+          origin="${url%%/maven/*}"
+          echo "::add-mask::$url"
+          echo "::add-mask::$origin"
+          export SNAPSHOTS_ORIGIN="$origin"
+          mkdir -p ~/.m2
+          cat > ~/.m2/settings.xml <<'XML'
+          <settings>
+            <servers>
+              <server>
+                <id>descoped-snapshots</id>
+                <username>aws</username>
+                <password>${env.CODEARTIFACT_AUTH_TOKEN}</password>
+                <repositoryOrigins>
+                  <repositoryOrigin>${env.SNAPSHOTS_ORIGIN}</repositoryOrigin>
+                </repositoryOrigins>
+              </server>
+            </servers>
+          </settings>
+          XML
+          # The target is named here and applies to SNAPSHOTs only: a release version has no repository and fails.
+          ./mvnw --batch-mode --no-transfer-progress -Dmaven.repository.credentialScope=strict \
+            -DaltSnapshotDeploymentRepository="descoped-snapshots::$url" -DdeployAtEnd=true \
+            -DskipTests -DskipITs source:jar-no-fork deploy
