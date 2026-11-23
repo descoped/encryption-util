@@ -21,7 +21,7 @@ derivation with **PBKDF2-HMAC-SHA256**. It runs on the JDK's own cryptography: n
 <dependency>
     <groupId>io.descoped.encryption</groupId>
     <artifactId>encryption-util</artifactId>
-    <version>3.0.0</version>
+    <version>3.0.1</version>
 </dependency>
 ```
 
