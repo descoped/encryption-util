@@ -89,8 +89,8 @@
 
     <profiles>
         <!-- Releases to Maven Central through the Central Portal, and nothing else: a SNAPSHOT is refused at validate.
-             Release (Ove approves each one): ./mvnw release:prepare release:perform -P secrets
-             Releases are uploaded with autoPublish=false and published by hand in the Portal. -->
+             Release (Ove approves each one): ./mvnw release:prepare release:perform -P secrets, tag v<version>.
+             Releases are uploaded with autoPublish=false and published by hand in the Portal. See docs/releasing.md. -->
         <profile>
             <id>central</id>
             <build>
@@ -308,7 +308,7 @@
                 <artifactId>maven-release-plugin</artifactId>
                 <version>3.3.1</version>
                 <configuration>
-                    <tagNameFormat>@{project.version}</tagNameFormat>
+                    <tagNameFormat>v@{project.version}</tagNameFormat>
                     <releaseProfiles>central,sign</releaseProfiles>
                     <goals>deploy</goals>
                 </configuration>

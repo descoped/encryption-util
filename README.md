@@ -157,10 +157,10 @@ SNAPSHOT version is kept, older builds are deleted after 14 days, and a branch S
 
 ## Building
 
-Build with JDK 17 or newer. `./mvnw` (the Maven Wrapper) downloads the pinned Maven, 3.10.1, and checks its SHA-256;
+Build with JDK 17 or newer. `./mvnw` (the Maven Wrapper) downloads the pinned Maven, 3.10.2, and checks its SHA-256;
 a Maven of your own works too if it is 3.6.3 or newer (not Maven 4 yet).
 
-Builds are reproducible from the next release on: the jars from a release tag are byte for byte the ones on Maven
+Builds are reproducible from 3.0.1 on: the jars from a release tag are byte for byte the ones on Maven
 Central. Build with the same major JDK as the release (`Build-Jdk-Spec` in the jar's manifest; if a hash differs, try
 the same patch version) from an LF checkout (`.gitattributes` enforces it):
 `git checkout <tag> && ./mvnw -P central package -DskipTests`, then compare the SHA-256 of `target/*.jar` (main, sources
@@ -173,5 +173,7 @@ and javadoc) with the `.sha256` files on repo1.maven.org. The `.asc` signatures 
 src/it/consumer/run.sh        # after package: a separate named module uses the jar, on the module and class path
 ./mvnw verify -P coverage     # JaCoCo report in target/site/jacoco
 ```
+
+How a release is made: [docs/releasing.md](docs/releasing.md).
 
 Licensed under the [Apache License, Version 2.0](LICENSE).
