@@ -134,7 +134,7 @@ jobs:
       # the job's environment: only the deploy step gets them, for at most 15 minutes.
       - id: aws
         if: steps.version.outputs.publish == 'true'
-        uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd  # v6.3.0
+        uses: aws-actions/configure-aws-credentials@45666896f5d8e0f10ae255413f3a4cdd03bdc8f5  # v6.3.1
         with:
           role-to-assume: ${{ secrets.CODEARTIFACT_SNAPSHOTS_ROLE_ARN }}
           aws-region: eu-north-1
